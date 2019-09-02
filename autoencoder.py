@@ -5,18 +5,26 @@ import torch.optim as optim
 
 
 class Autoencoder(nn.Module):
-	def __init__(self, in_dim, code_dim = 100):
+	def __init__(self, input_dims, code_dims = 100):
 		super(autoencoder, self).__init__()
 		self.encoder = nn.Sequential(
-			nn.Linear(in_features, code_features),
+			nn.Linear(input_dims, code_dims),
 			nn.Relu())
-		self.decoder = nn.Linear(code_features, in_features)
+		self.decoder = nn.Sequential(
+			nn.Linear(code_dims, input_dims),
+			nn.LogSigmoid())
+	
 
 	def forward(self, x):
 		encoded_x = self.encoder(x)
 		reconstructed_x = self.decode(x)
 		return reconstructed_x
 
+
+
+def encoder_criterion(preds, labels):
+	loss = nn.MSELoss()
+	return loss(outputs, preds)
 
 
 

@@ -2,13 +2,42 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import warnings
+
+from torch.utils.data import Dataset, Dataloader
+from torchvision import transforms, utils
+
+from autoencoder import Autoencoder
+
+import os
 
 
-def autoencoder_train():
+warnings.filterwarnings("ignore")
+
+def add_autoencoder(input_dims, code_dims):
+""" 
+Inputs: 
+	1) input_dims = input_dims of the data or the images being fed into the autoencoder. Check the
+	README.md for more details regarding the choice of input.
+	2) code_dims = the dimenions of the "code" which is a lower dimensional representation of the 
+	input data.
+
+Outputs:
+	1) autoencoder = A reference to the autoencoder object that is created 
+	2) store_path = Path to the directory where the trained model and the checkpoints will be stored
+"""	
+	autoencoder = Autoencoder(input_dims, code_dims)
+	num_ae = len(next(os.walk(dir)[1]))
+	path = os.getcwd()
+	store_path = path + "/models/autoencoders/autoencoder_"+str(num_ae+1)
+	os.mkdir(store_path)
+	return autoencoder, store_path
+
+
+def autoencoder_train(model, path, dset_loaders, num_epochs, optimizer, use_gpu):
 	since = time.time()
-####################### Needs code for loading data into this #########################
-
-
+####################### Needs code for loading data into this ##########################		
+	
 
 
 
@@ -16,6 +45,9 @@ def autoencoder_train():
 
 ########################################################################################
 	for epoch in range(start_epoch, num_epochs):
+		running_loss = 0
+		running_correct_predictions = 0
+
 		print ("Epoch {}/{}".format(epoch, num_epochs-1))
 		print ("-"*20)
 
@@ -32,7 +64,7 @@ def autoencoder_train():
 
 			outputs = model(inputs)
 			preds = torch.argmax(outputs, 1)
-			loss = criterion(outputs, preds)
+			loss = criterion(preds, labels)
 
 			loss.backward()
 			optimizer.step()
@@ -61,3 +93,8 @@ def autoencoder_train():
 	return model
 
 	
+
+def distillation_loss(preds, ref_scores, temperature):
+	
+
+
