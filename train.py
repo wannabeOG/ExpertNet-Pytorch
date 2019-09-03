@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import warnings
 
 from torch.utils.data import Dataset, Dataloader
 from torchvision import transforms, utils
@@ -10,14 +9,16 @@ from torchvision import transforms, utils
 from autoencoder import Autoencoder
 
 import os
-
+import warnings
+from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
+
 
 def add_autoencoder(input_dims, code_dims):
 """ 
 Inputs: 
-	1) input_dims = input_dims of the data or the images being fed into the autoencoder. Check the
+	1) input_dims = input_dims of the features being fed into the autoencoder. Check the
 	README.md for more details regarding the choice of input.
 	2) code_dims = the dimenions of the "code" which is a lower dimensional representation of the 
 	input data.
@@ -27,74 +28,102 @@ Outputs:
 	2) store_path = Path to the directory where the trained model and the checkpoints will be stored
 """	
 	autoencoder = Autoencoder(input_dims, code_dims)
+	og_path = os.getcwd()
+	dir = og_path + "/models/autoencoders/"
 	num_ae = len(next(os.walk(dir)[1]))
-	path = os.getcwd()
-	store_path = path + "/models/autoencoders/autoencoder_"+str(num_ae+1)
+	store_path = dir + "/autoencoder_"+str(num_ae+1)
 	os.mkdir(store_path)
+
 	return autoencoder, store_path
 
 
-def autoencoder_train(model, path, dset_loaders, num_epochs, optimizer, use_gpu):
+def autoencoder_train(model, path, optimizer, encoder_criterion, dset_loaders, num_epochs, checkpoint_file, use_gpu):
 	since = time.time()
-####################### Needs code for loading data into this ##########################		
-	
+	best_perform = 10e6
+		
+	if (os.path.isfile(path + "/" + checkpoint_file)):
+		print ("Loading checkpoint '{}' ".format(checkpoint_file))
+		
+		checkpoint = torch.load(resume)
+		start_epoch = checkpoint['epoch']
+		print ("Loading the model")
+		model = model.load_state_dict(checkpoint['state_dict'])
+		print ("Loading the optimizer")
+		optimizer = optimizer.load_state_dict(checkpoint['optimizer'])
+		print ("Done")
 
+	else:
+		start_epoch = 0
 
-
-
-
-########################################################################################
 	for epoch in range(start_epoch, num_epochs):
-		running_loss = 0
-		running_correct_predictions = 0
+		
+		print ("Epoch {}/{}".format(epoch+1, num_epochs))
+		print ("-"*10)
 
-		print ("Epoch {}/{}".format(epoch, num_epochs-1))
-		print ("-"*20)
-
-		for data in dset_loaders[phase]:
-			input_data, labels = data
-
-			if (use_gpu):
-				input_data, labels = Variable(input_data.cuda()), Variable(labels.cuda())
+		for phase in ["train", "val"]:
+			running_loss = 0
+			running_correct_predictions = 0
+			
+			if (phase == "train"):
+				model = model.train(True)
 			else:
-				input_data, labels = Variable(input_data), Variable(labels)
+				model = model.train(False)
 
-			optimizer.zero_grad()
-			model.zero_grad()
+			for data in dset_loaders[phase]:
+				input_data, labels = data
 
-			outputs = model(inputs)
-			preds = torch.argmax(outputs, 1)
-			loss = criterion(preds, labels)
+				if (use_gpu):
+					input_data, labels = Variable(input_data.cuda()), Variable(labels.cuda())
+				else:
+					input_data, labels = Variable(input_data), Variable(labels)
 
-			loss.backward()
-			optimizer.step()
+				optimizer.zero_grad()
+				model.zero_grad()
 
-			running_loss += loss.data[0]
-			running_correct_predictions += torch.sum(preds == labels.data)
+				outputs = model(inputs)
+				loss = encoder_criterion(outputs, inputs)
+
+				if (phase == "train"):	
+					loss.backward()
+					optimizer.step()
+
+				running_loss += loss.data[0]
+				running_correct_predictions += torch.sum(preds == labels.data)
 
 
 		epoch_loss = running_loss/dset_size
 		epoch_accuracy = running_accuracy/dset_size
 
-		print('Epoch Loss:{}, Epoch Accuracy:{}'.format(epoch_loss, epoch_accuracy))
+		if(phase == "train"):
+			print('Epoch Loss:{}, Epoch Accuracy:{}'.format(epoch_loss, epoch_accuracy))
+			
+			if(epoch != 0 && (epoch+1) % 5 == 0):
+				epoch_file_name = path +'/'+str(epoch+1)+'.pth.tar'
+				torch.save({
+					'epoch': epoch,
+					'epoch_loss': epoch_loss, 
+					'epoch_accuracy': epoch_accuracy, 
+		            'model_state_dict': model.state_dict(),
+		            'optimizer_state_dict': optimizer.state_dict(),
+		           
+		            }, epoch_file_name)
 
-		epoch_file_name = export_dir+'/'+str(epoch)+'.pth.tar'
-		torch.save({
-			'epoch': epoch,
-			'epoch_loss': epoch_loss, 
-			'epoch_accuracy': epoch_accuracy, 
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-           
-            }, epoch_file_name)
+        else:
+			
+			if (epoch_loss < best_acc):
+        		best_acc = epoch_loss
+        		torch.save(model.state_dict(), path + "/best_performing_model.pth")				
 
+	
 	elapsed_time = time.time()-since
 	print ("This procedure took {:.2f} minutes and {:.2f} seconds".format(elapsed_time//60, elapsed_time%60))
+	print ("The best performing model has a {:.2f} loss on the validation set".format(best_acc))
+
 	return model
 
 	
 
-def distillation_loss(preds, ref_scores, temperature):
+
 	
 
 
