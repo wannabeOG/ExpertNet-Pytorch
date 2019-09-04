@@ -37,14 +37,14 @@ Outputs:
 	return autoencoder, store_path
 
 
-def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, num_epochs, checkpoint_file, use_gpu):
-	
+def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu):
+
 	since = time.time()
 	best_perform = 10e6
-		
+	device = 
+	num_of_classes = 0
 	if (os.path.isfile(path + "/" + checkpoint_file)):
 		print ("Loading checkpoint '{}' ".format(checkpoint_file))
-		
 		checkpoint = torch.load(resume)
 		start_epoch = checkpoint['epoch']
 		print ("Loading the model")
@@ -57,14 +57,14 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 		start_epoch = 0
 
 	for epoch in range(start_epoch, num_epochs):
-		
+
 		print ("Epoch {}/{}".format(epoch+1, num_epochs))
 		print ("-"*10)
 
 		for phase in ["train", "val"]:
 			running_loss = 0
 			running_correct_predictions = 0
-			
+
 			if (phase == "train"):
 				model = model.train(True)
 			else:
@@ -72,94 +72,6 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 
 			for data in dset_loaders[phase]:
 				input_data, labels = data
-				
-				if (use_gpu):
-					input_data, labels = Variable(input_data.cuda()), Variable(labels.cuda())
-				else:
-					input_data, labels = Variable(input_data), Variable(labels)
-
-				input_to_ae = feature_extractor(inputs_data)
-				
-
-				optimizer.zero_grad()
-				model.zero_grad()
-
-				outputs = model(input_to_ae)
-				loss = encoder_criterion(outputs, inputs)
-
-				if (phase == "train"):	
-					loss.backward()
-					optimizer.step()
-
-				running_loss += loss.data[0]
-				running_correct_predictions += torch.sum(preds == labels.data)
-
-
-		epoch_loss = running_loss/dset_size
-		epoch_accuracy = running_accuracy/dset_size
-
-		if(phase == "train"):
-			print('Epoch Loss:{}, Epoch Accuracy:{}'.format(epoch_loss, epoch_accuracy))
-			
-			if(epoch != 0 && (epoch+1) % 5 == 0):
-				epoch_file_name = path +'/'+str(epoch+1)+'.pth.tar'
-				torch.save({
-					'epoch': epoch,
-					'epoch_loss': epoch_loss, 
-					'epoch_accuracy': epoch_accuracy, 
-		            'model_state_dict': model.state_dict(),
-		            'optimizer_state_dict': optimizer.state_dict(),
-		           
-		            }, epoch_file_name)
-
-        else:
-			
-			if (epoch_loss < best_acc):
-        		best_acc = epoch_loss
-        		torch.save(model.state_dict(), path + "/best_performing_model.pth")				
-
-	
-	elapsed_time = time.time()-since
-	print ("This procedure took {:.2f} minutes and {:.2f} seconds".format(elapsed_time//60, elapsed_time%60))
-	print ("The best performing model has a {:.2f} loss on the validation set".format(best_acc))
-
-	return model
-
-
-def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu):
-
-	since = time.time()
-	best_perform = 10e6
-
-	if (os.path.isfile(path + "/" + checkpoint_file)):
-		print ("Loading checkpoint '{}' ".format(checkpoint_file))
-		checkpoint = torch.load(resume)
-		start_epoch = checkpoint['epoch']
-		print ("Loading the model")
-		model = model.load_state_dict(checkpoint['state_dict'])
-		print ("Loading the optimizer")
-		optimizer = optimizer.load_state_dict(checkpoint['optimizer'])
-		print ("Done")
-
-	else:
-		start_epoch = 0
-
-	for epoch in range(start_epoch, num_epochs):
-
-		print ("Epoch {}/{}".format(epoch+1, num_epochs))
-		print ("-"*10)
-
-		for phase in ["train", "val"]:
-			running_loss = 0
-			running_correct_predictions = 0
-
-			if (phase == "train"):
-				model = model.train(True)
-			else:
-				model = model.train(False)
-
-			for data in dset_loaders[phase]:
-				input_data, _ = data
 
 				if (use_gpu):
 					input_data = Variable(input_data.to(device)) 
@@ -167,15 +79,17 @@ def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder
 				else:
 					input_data  = Variable(input_data)
 
+
 				feature_extractor.to(device)
 
 				input_to_ae = feature_extractor(input_data)
 
-				input_to_ae = input_to_ae.view(-1, 256*13*13)
+				input_to_ae = input_to_ae.view(input_to_ae.size(0), -1)
 
 				optimizer.zero_grad()
 				model.zero_grad()
 
+				
 
 				input_to_ae = input_to_ae.to(device)
 				model.to(device)
