@@ -41,8 +41,9 @@ def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder
 
 	since = time.time()
 	best_perform = 10e6
-	device = 
+	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 	num_of_classes = 0
+
 	if (os.path.isfile(path + "/" + checkpoint_file)):
 		print ("Loading checkpoint '{}' ".format(checkpoint_file))
 		checkpoint = torch.load(resume)
@@ -81,15 +82,11 @@ def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder
 
 
 				feature_extractor.to(device)
-
 				input_to_ae = feature_extractor(input_data)
-
 				input_to_ae = input_to_ae.view(input_to_ae.size(0), -1)
 
 				optimizer.zero_grad()
 				model.zero_grad()
-
-				
 
 				input_to_ae = input_to_ae.to(device)
 				model.to(device)
