@@ -12,18 +12,13 @@ class Autoencoder(nn.Module):
             nn.ReLU())
         self.decoder = nn.Sequential(
             nn.Linear(code_dims, input_dims),
-            nn.LogSigmoid())
+            nn.Sigmoid())
 
 
     def forward(self, x):
         encoded_x = self.encoder(x)
         reconstructed_x = self.decoder(encoded_x)
         return reconstructed_x
-
-
-def encoder_criterion(preds, labels):
-	loss = nn.MSELoss()
-	return loss(outputs, preds)
 
 
 class Alexnet_FE(nn.module):
@@ -33,3 +28,13 @@ class Alexnet_FE(nn.module):
 
 	def forward(self, x):
 		return self.fe_model(x)
+
+
+class GenModel(nn.Module):
+    def __init__(self, classes):
+        super(GenModel, self).__init__()
+        self.model = models.alexnet(pretrained = True)
+        self.model.classifier[-1] = nn.Linear(self.model.classifier[-1].in_features, classes)
+
+    def forward(self, x):
+        return self.model(x)
