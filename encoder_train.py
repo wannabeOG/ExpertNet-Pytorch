@@ -59,7 +59,7 @@ Outputs:
 
 Function:
 	Returns a trained autoencoder model
-	
+
 """	
 	since = time.time()
 	best_perform = 10e6
