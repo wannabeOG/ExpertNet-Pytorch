@@ -2,71 +2,40 @@ import torch
 import os
 from torchvision import models
 
-from autoencoder import Autoencoder
-
-def task_metric(rerrror_comp, r_error_ref):
-	return (1-(rerror_ref-r_error_comp)/r_error_comp)
-
-#tested
-def kaiming_initilaization(layer):
-	nn.init.kaiming_normal_(layer.weight, nonlinearity='sigmoid')
-
-def get_initial_model(feature_extractor, layer_dict, dset_loaders, encoder_criterion, use_gpu):
-	
-	path = os.getcwd()
-	destination = path + "/models/autoencoders"
-	num_ae = len(next(os.walk(destination))[1])
-	best_relatedness = 0
-	model_number = -999
-	device = torch.device("cuda:0" if use_gpu else "cpu")
-
-	model_path = destination + "/autoencoder_"+str(i+1) +"/best_performing_model.pth"
-	model = Autoencoder(input_dims)
-	model.load_state_dict(torch.load(model_path), map_location= device)
-	
-	for i in range(num_ae):
-		
-		model_path = destination + "/autoencoder_"+str(num_ae-i) +"/best_performing_model.pth"
-		model = Autoencoder(input_dims)
-		model.load_state_dict(torch.load(model_path), map_location= device)
-		
-		feature_extractor = Alexnet_FE(layer_dict)
-		feature_extractor.to(device)
-		
-		model.train(False)
-
-		for data in dset_loaders:
-			
-			input_data, _ = data
-			input_data.to(device)
-			input_to_ae = feature_extractor(input_data)
-			input_to_ae = input_to_ae.view(input_to_ae.size(0), -1)
-
-			output = model(input_to_ae)
-			loss = encoder_criterion(outputs, input_data)
-			if (i == 0): 
-				rerror_comp = loss
-			else:
-				relatedness = task_metric(loss, rerrror_comp)
-				
-				if (relatedness > best_relatedness):
-					best_relatedness = relatedness
-					model_number = (num_ae - i)
+from model_utils import *
+from autoencoder import GenModel
 
 
-	return model_number, best_relatedness			
+def train_model(num_classes, alpha = 0.01, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu):
+""" 
+Inputs: 
+	1) num_classes = A reference to the Autoencoder model that needs to be trained 
+	2) alpha = A constant which is used to determine the contributions of two distinct loss functions to the total
+	   loss finally reported 
+	3) path = The path where the model will be stored
+	4) optimizer = The optimizer to optimize the parameters of the Autoencoder
+	5) encoder_criterion = The loss criterion for training the Autoencoder
+	6) dset_loaders = Dataset loaders for the model
+	7) dset_size = Size of the dataset loaders
+	8) num_of_epochs = Number of epochs for which the model needs to be trained
+	9) checkpoint_file = A checkpoint file which can be used to resume training; starting from the epoch at 
+	   which the checkpoint file was created 
+	10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
+
+Outputs:
+	1) model = A reference to the trained model
 
 
-#Tested out, make sure that model_init is a shallow copy of the model that is being passed
-def initialize_new_model(model_init, num_classes, num_of_classes_old):
-	weight_info = model_init.classifier[-1].weight.data
-	model_init.classifier[-1] = nn.Linear(model_init.classifier[-1].in_features, num_of_classes_old+num_classes)
-	kaiming_initilaization(model_init.classifier[-1])
-	model_init.classifier[-1].weight[:num_of_classes_old, :] = weight_info
-	return model_init 
+Function: Trains the model
+	1) If the task relatedness is greater than 0.85, the function uses the Learning without Forgetting method
+	2) If the task relatedness is lesser than 0.85, the function uses the normal finetuning procedure as outlined
+	   in the "Learning without Forgetting" paper ("https://arxiv.org/abs/1606.09282")
 
+   Whilst implementing finetuning procedure, PyTorch does not provide the option to only partially freeze the 
+   weights of a layer. In order to implement this idea, I manually zero the gradients from the older classes in
+   order to ensure that these weights do not have a learning signal from the loss function. 
 
-def train_model(num_classes):
+"""	
 	
 	model_number, best_relatedness = get_initial_model(feature_extractor, dset_loaders, encoder_criterion, use_gpu)
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
@@ -91,9 +60,11 @@ def train_model(num_classes):
 		file1 = file1.write(input_to_txtfile)
 		file1.close()
 
-
+	# Load the most related model into memory
 	model_init = GenModel(num_of_classes_old)
 	model_init.load_state_dict(torch.load(path_to_dir+"/best_performing_model.pth", map_location = device))
+	
+	# Reference model to compute the soft scores for the LwF(Learning without Forgetting) method
 	ref_model = copy.deepcopy(model_init)
 	ref_model.train(False)
 
@@ -101,7 +72,8 @@ def train_model(num_classes):
 	model_init = initialize_new_model(model_init, num_classes, num_of_classes_old)
 	model_init.to(device)
 
-	#Process for LwF
+	#The training process for LwF (Learning without Forgetting)
+
 	if (best_relatedness > 0.85):
 
 		for epoch in range(start_epoch, num_epochs):
@@ -127,21 +99,23 @@ def train_model(num_classes):
 					else:
 						input_data  = Variable(input_data)
 						labels = Variable(labels)
-
-
+					
 					model_init.to(device)
 					ref_model.to(device)
 					
-					output = model(input_data)
+					output = model_init(input_data)
 					ref_output = ref_model(input_data)
 
 					optimizer.zero_grad()
-					model.zero_grad()
-					
+					model_init.zero_grad()
+
+					# loss_1 only takes in the outputs from the nodes of the old classes  
 					loss_1 = model_criterion(output[:num_of_classes_old], ref_output, flag = "Distill")
+					
+					# loss_2 takes in the outputs from the nodes that were initialized for the new task
 					loss_2 = model_criterion(output[num_of_classes_old:], labels, flag = "CE")
 
-					total_loss = loss_1 + alpha*loss_2
+					total_loss = alpha*loss_1 + loss_2
 
 					if (phase == "train"):	
 						total_loss.backward()
@@ -159,7 +133,7 @@ def train_model(num_classes):
 						torch.save({
 						'epoch': epoch,
 						'epoch_loss': epoch_loss, 
-						'model_state_dict': model.state_dict(),
+						'model_state_dict': model_init.state_dict(),
 						'optimizer_state_dict': optimizer.state_dict(),
 
 						}, epoch_file_name)
@@ -168,7 +142,7 @@ def train_model(num_classes):
 				else:
 					if (epoch_loss < best_perform):
 						best_perform = epoch_loss
-						torch.save(model.state_dict(), path + "/best_performing_model.pth")
+						torch.save(model_init.state_dict(), path + "/best_performing_model.pth")
 	
 
 	
@@ -185,9 +159,9 @@ def train_model(num_classes):
 				running_correct_predictions = 0
 
 				if (phase == "train"):
-					model = model.train(True)
+					model_init = model_init.train(True)
 				else:
-					model = model.train(False)
+					model_init = model_init.train(False)
 
 				for data in dset_loaders[phase]:
 					input_data, labels = data
@@ -201,18 +175,20 @@ def train_model(num_classes):
 						labels = Variable(labels)
 
 
-					model.to(device)
+					model_init.to(device)
 
-					output = model(input_data)
+					output = model_init(input_data)
 					
 					optimizer.zero_grad()
-					model.zero_grad()
+					model_init.zero_grad()
 					
+					#Since the
 					loss = model_criterion(output[num_of_classes_old:], labels)
 
 					if (phase == "train"):	
 						loss.backward()
-						model.classifier[-1].weight.grad[:num_of_classes_old,:] = 0  
+						# Zero the gradients from the older classes
+						model_init.classifier[-1].weight.grad[:num_of_classes_old,:] = 0  
 						optimizer.step()
 
 					running_loss += loss.item()
@@ -227,7 +203,7 @@ def train_model(num_classes):
 						torch.save({
 						'epoch': epoch,
 						'epoch_loss': epoch_loss, 
-						'model_state_dict': model.state_dict(),
+						'model_state_dict': model_init.state_dict(),
 						'optimizer_state_dict': optimizer.state_dict(),
 
 						}, epoch_file_name)
@@ -236,10 +212,10 @@ def train_model(num_classes):
 				else:
 					if (epoch_loss < best_perform):
 						best_perform = epoch_loss
-						torch.save(model.state_dict(), path + "/best_performing_model.pth")
+						torch.save(model_init.state_dict(), path + "/best_performing_model.pth")
 
 
-
+	return model_init
 
 
 
