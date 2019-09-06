@@ -10,7 +10,7 @@ from autoencoder import Autoencoder, Alexnet_FE
 
 import os
 import warnings
-from tqdm import tqdm
+import time
 
 warnings.filterwarnings("ignore")
 
@@ -37,13 +37,37 @@ Outputs:
 	return autoencoder, store_path
 
 
-def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu):
+def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu):
+""" 
+Inputs: 
+	1) model = A reference to the Autoencoder model that needs to be trained 
+	2) feature_extractor = A reference to to the feature_extractor part of Alexnet; it returns the features
+	   from the last convolutional layer of the Alexnet
+	3) path = The path where the model will be stored
+	4) optimizer = The optimizer to optimize the parameters of the Autoencoder
+	5) encoder_criterion = The loss criterion for training the Autoencoder
+	6) dset_loaders = Dataset loaders for the model
+	7) dset_size = Size of the dataset loaders
+	8) num_of_epochs = Number of epochs for which the model needs to be trained
+	9) checkpoint_file = A checkpoint file which can be used to resume training; starting from the epoch at 
+	   which the checkpoint file was created 
+	10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
 
+Outputs:
+	1) model = A reference to the trained model
+
+
+Function:
+	Returns a trained autoencoder model
+	
+"""	
 	since = time.time()
 	best_perform = 10e6
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 	num_of_classes = 0
 
+################################### Code for loading the checkpoint file ########################################
+	
 	if (os.path.isfile(path + "/" + checkpoint_file)):
 		print ("Loading checkpoint '{}' ".format(checkpoint_file))
 		checkpoint = torch.load(resume)
@@ -56,16 +80,20 @@ def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder
 
 	else:
 		start_epoch = 0
+#################################################################################################################
+	
 
 	for epoch in range(start_epoch, num_epochs):
 
 		print ("Epoch {}/{}".format(epoch+1, num_epochs))
 		print ("-"*10)
 
+		# The model is evaluated at each epoch and the best performing model 
+		# on the validation set is saved 
+
 		for phase in ["train", "val"]:
 			running_loss = 0
-			running_correct_predictions = 0
-
+			
 			if (phase == "train"):
 				model = model.train(True)
 			else:
@@ -80,6 +108,8 @@ def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder
 				else:
 					input_data  = Variable(input_data)
 
+				# Input_to_ae is the features from the last convolutional layer
+				# of an Alexnet trained on Imagenet 
 
 				feature_extractor.to(device)
 				input_to_ae = feature_extractor(input_data)
@@ -104,7 +134,8 @@ def autoencoder_train(model, device, feature_extractor, path, optimizer, encoder
 
 			if(phase == "train"):
 				print('Epoch Loss:{}, Epoch Accuracy:{}'.format(epoch_loss, epoch_accuracy))
-
+				
+				#Creates a checkpoint every 5 epochs
 				if(epoch != 0 and (epoch+1) % 5 == 0):
 					epoch_file_name = path +'/'+str(epoch+1)+'.pth.tar'
 					torch.save({
