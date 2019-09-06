@@ -1,17 +1,17 @@
 def task_metric(r_errror_comp, r_error_ref):
-""" 
-Inputs: 
-	1) r_error_comp = Reconstruction error for model 1
-	2) r_error_ref = Reconstruction error for model 2  
-	
-Outputs:
-	1) task_metric = The task metric that was used in the paper
-	   Max value = 1 indicates that the tasks are heavily related
-	   Max value = 0 indicates that the tasks are not at all related 
-	
-Function: This function returns the task metric
+	""" 
+	Inputs: 
+		1) r_error_comp = Reconstruction error for model 1
+		2) r_error_ref = Reconstruction error for model 2  
+		
+	Outputs:
+		1) task_metric = The task metric that was used in the paper
+		   Max value = 1 indicates that the tasks are heavily related
+		   Max value = 0 indicates that the tasks are not at all related 
+		
+	Function: This function returns the task metric
 
-"""
+	"""
 	return (1-(rerror_ref-r_error_comp)/r_error_comp)
 
 
@@ -20,22 +20,22 @@ def kaiming_initilaization(layer):
 
 
 def get_initial_model(feature_extractor, dset_loaders, encoder_criterion, use_gpu):
-""" 
-Inputs: 
-	1) model_init = A reference to the model which needs to be initialized
-	2) num_classes = The number of classes in the new task for which we need to train a expert  
-	3) num_of_classes_old = The number of classes in the model that is used as a reference for
-	   initializing the new model.  
+	""" 
+	Inputs: 
+		1) model_init = A reference to the model which needs to be initialized
+		2) num_classes = The number of classes in the new task for which we need to train a expert  
+		3) num_of_classes_old = The number of classes in the model that is used as a reference for
+		   initializing the new model.  
 
-Outputs:
-	1) autoencoder = A reference to the autoencoder object that is created 
-	2) store_path = Path to the directory where the trained model and the checkpoints will be stored
+	Outputs:
+		1) autoencoder = A reference to the autoencoder object that is created 
+		2) store_path = Path to the directory where the trained model and the checkpoints will be stored
 
-Function: This function takes in a reference model and initializes a new model with the reference model's
-weights (for the old task) and the weights for the new task are initialized using the kaiming initialization
-method
+	Function: This function takes in a reference model and initializes a new model with the reference model's
+	weights (for the old task) and the weights for the new task are initialized using the kaiming initialization
+	method
 
-"""	
+	"""	
 	path = os.getcwd()
 	destination = path + "/models/autoencoders"
 	num_ae = len(next(os.walk(destination))[1])
@@ -82,22 +82,22 @@ method
 
 
 def initialize_new_model(model_init, num_classes, num_of_classes_old):
-""" 
-Inputs: 
-	1) model_init = A reference to the model which needs to be initialized
-	2) num_classes = The number of classes in the new task for which we need to train a expert  
-	3) num_of_classes_old = The number of classes in the model that is used as a reference for
-	   initializing the new model.  
+	""" 
+	Inputs: 
+		1) model_init = A reference to the model which needs to be initialized
+		2) num_classes = The number of classes in the new task for which we need to train a expert  
+		3) num_of_classes_old = The number of classes in the model that is used as a reference for
+		   initializing the new model.  
 
-Outputs:
-	1) autoencoder = A reference to the autoencoder object that is created 
-	2) store_path = Path to the directory where the trained model and the checkpoints will be stored
+	Outputs:
+		1) autoencoder = A reference to the autoencoder object that is created 
+		2) store_path = Path to the directory where the trained model and the checkpoints will be stored
 
-Function: This function takes in a reference model and initializes a new model with the reference model's
-weights (for the old task) and the weights for the new task are initialized using the kaiming initialization
-method
+	Function: This function takes in a reference model and initializes a new model with the reference model's
+	weights (for the old task) and the weights for the new task are initialized using the kaiming initialization
+	method
 
-"""	
+	"""	
 	weight_info = model_init.classifier[-1].weight.data
 	model_init.classifier[-1] = nn.Linear(model_init.classifier[-1].in_features, num_of_classes_old+num_classes)
 	kaiming_initilaization(model_init.classifier[-1])
@@ -118,10 +118,10 @@ def model_criterion(preds, labels, flag, T = 2):
 		return loss(preds, labels)
 
 	elif(flag == "Distill"):
-	
-	""" The labels are the teacher scores or the reference
-		scores in this case
-	"""	
+		
+		""" The labels are the teacher scores or the reference
+			scores in this case
+		"""	
 		
 		preds = F.softmax(preds)
 		labels = F.softmax(labels)

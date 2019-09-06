@@ -28,11 +28,12 @@ from model_utils import *
 
 parser = argparse.ArgumentParser(description='Expert Gate')
 parser.add_argument('--outfile', default='temp_0.1.csv', type=str, help='Output file name')
-parser.add_argument('--matr', default='results/acc_matr.npz', help='Accuracy matrix file name')
-parser.add_argument('--num_classes', default=2, help='Number of new classes introduced each time', type=int)
+parser.add_argument('--data_file', default='', help='Path to the data folder to train the model on', type=str)
 parser.add_argument('--init_lr', default=0.1, type=float, help='Init learning rate')
-
 parser.add_argument('--num_epochs', default=40, type=int, help='Number of epochs')
+parser.add_argument('--batch_size', default=16, type=int, help='Mini batch size')
 
-parser.add_argument('--batch_size', default=64, type=int, help='Mini batch size')
 args = parser.parse_args()
+
+
+
