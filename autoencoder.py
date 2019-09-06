@@ -5,14 +5,15 @@ import torch.nn.functional as F
 
 
 class Autoencoder(nn.Module):
+
     def __init__(self, input_dims, code_dims = 100):
         super(Autoencoder, self).__init__()
         self.encoder = nn.Sequential(
-            nn.Linear(input_dims, code_dims),
-            nn.ReLU())
+        nn.Linear(input_dims, code_dims),
+        nn.ReLU())
         self.decoder = nn.Sequential(
-            nn.Linear(code_dims, input_dims),
-            nn.Sigmoid())
+        nn.Linear(code_dims, input_dims),
+        nn.Sigmoid())
 
 
     def forward(self, x):
@@ -21,7 +22,7 @@ class Autoencoder(nn.Module):
         return reconstructed_x
 
 
-class Alexnet_FE(nn.module):
+class Alexnet_FE(nn.Module):
 	def __init__(self, alexnet_model):
 		super(Alexnet_FE, self).__init__()
 		self.fe_model = nn.Sequential(*list(alexnet_model.children())[0][:-2])
@@ -38,3 +39,5 @@ class GenModel(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+

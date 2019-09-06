@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from torch.utils.data import Dataset, Dataloader
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils, models
 
 from autoencoder import Autoencoder, Alexnet_FE
@@ -16,17 +16,18 @@ warnings.filterwarnings("ignore")
 
 
 def add_autoencoder(input_dims, code_dims):
-""" 
-Inputs: 
-	1) input_dims = input_dims of the features being fed into the autoencoder. Check the
-	README.md for more details regarding the choice of input.
-	2) code_dims = the dimenions of the "code" which is a lower dimensional representation of the 
-	input data.
 
-Outputs:
-	1) autoencoder = A reference to the autoencoder object that is created 
-	2) store_path = Path to the directory where the trained model and the checkpoints will be stored
-"""	
+	"""Inputs: 
+		1) input_dims = input_dims of the features being fed into the autoencoder. Check the
+		README.md for more details regarding the choice of input.
+		2) code_dims = the dimenions of the "code" which is a lower dimensional representation of the 
+		input data.
+
+	Outputs:
+		1) autoencoder = A reference to the autoencoder object that is created 
+		2) store_path = Path to the directory where the trained model and the checkpoints will be stored
+	"""	
+		
 	autoencoder = Autoencoder(input_dims, code_dims)
 	og_path = os.getcwd()
 	dir = og_path + "/models/autoencoders/"
@@ -38,29 +39,29 @@ Outputs:
 
 
 def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu):
-""" 
-Inputs: 
-	1) model = A reference to the Autoencoder model that needs to be trained 
-	2) feature_extractor = A reference to to the feature_extractor part of Alexnet; it returns the features
-	   from the last convolutional layer of the Alexnet
-	3) path = The path where the model will be stored
-	4) optimizer = The optimizer to optimize the parameters of the Autoencoder
-	5) encoder_criterion = The loss criterion for training the Autoencoder
-	6) dset_loaders = Dataset loaders for the model
-	7) dset_size = Size of the dataset loaders
-	8) num_of_epochs = Number of epochs for which the model needs to be trained
-	9) checkpoint_file = A checkpoint file which can be used to resume training; starting from the epoch at 
-	   which the checkpoint file was created 
-	10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
+	"""
+	Inputs:
+		1) model = A reference to the Autoencoder model that needs to be trained 
+		2) feature_extractor = A reference to to the feature_extractor part of Alexnet; it returns the features
+		   from the last convolutional layer of the Alexnet
+		3) path = The path where the model will be stored
+		4) optimizer = The optimizer to optimize the parameters of the Autoencoder
+		5) encoder_criterion = The loss criterion for training the Autoencoder
+		6) dset_loaders = Dataset loaders for the model
+		7) dset_size = Size of the dataset loaders
+		8) num_of_epochs = Number of epochs for which the model needs to be trained
+		9) checkpoint_file = A checkpoint file which can be used to resume training; starting from the epoch at 
+		   which the checkpoint file was created 
+		10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
 
-Outputs:
-	1) model = A reference to the trained model
+	Outputs:
+		1) model = A reference to the trained model
 
 
-Function:
-	Returns a trained autoencoder model
+	Function:
+		Returns a trained autoencoder model
 
-"""	
+	"""
 	since = time.time()
 	best_perform = 10e6
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
