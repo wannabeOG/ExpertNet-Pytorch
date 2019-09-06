@@ -28,6 +28,31 @@ data_transforms = {
 
 class GenDataset(Datsets):
 
+    def __init__(self, path):
+        super(GenDataset, self).__init__()
+        self.dataset = torchvision.datasets.ImageFolder(path)
+
+
+    def __len__(self):
+        return len(self.dataset['train'])
+
+
+    def __getitem__(self, index):
+        image = self.data['train'][index]
+        task = random.randint(0, len(self.task_defn) - 1)
+
+        # now sample predictions based on task
+        select_index = torch.LongTensor(self.task_defn[task])
+        labels = image.gather(0, torch.LongTensor(select_index))
+        task = torch.LongTensor([task])
+        if self.opt.get('use_gpu'):
+            image, task, labels = image.cuda(), task.cuda(), labels.cuda()
+        return {'image': image, 'task': task, 'labels': labels}
+
+
+
+
+
 
 
 

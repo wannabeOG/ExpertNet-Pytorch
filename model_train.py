@@ -6,36 +6,36 @@ from model_utils import *
 from autoencoder import GenModel
 
 
-def train_model(num_classes, alpha = 0.01, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu):
-""" 
-Inputs: 
-	1) num_classes = A reference to the Autoencoder model that needs to be trained 
-	2) alpha = A constant which is used to determine the contributions of two distinct loss functions to the total
-	   loss finally reported 
-	3) path = The path where the model will be stored
-	4) optimizer = The optimizer to optimize the parameters of the Autoencoder
-	5) encoder_criterion = The loss criterion for training the Autoencoder
-	6) dset_loaders = Dataset loaders for the model
-	7) dset_size = Size of the dataset loaders
-	8) num_of_epochs = Number of epochs for which the model needs to be trained
-	9) checkpoint_file = A checkpoint file which can be used to resume training; starting from the epoch at 
-	   which the checkpoint file was created 
-	10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
+def train_model(num_classes, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu, alpha = 0.01):
+	""" 
+	Inputs: 
+		1) num_classes = A reference to the Autoencoder model that needs to be trained 
+		2) alpha = A constant which is used to determine the contributions of two distinct loss functions to the total
+		   loss finally reported 
+		3) path = The path where the model will be stored
+		4) optimizer = The optimizer to optimize the parameters of the Autoencoder
+		5) encoder_criterion = The loss criterion for training the Autoencoder
+		6) dset_loaders = Dataset loaders for the model
+		7) dset_size = Size of the dataset loaders
+		8) num_of_epochs = Number of epochs for which the model needs to be trained
+		9) checkpoint_file = A checkpoint file which can be used to resume training; starting from the epoch at 
+		   which the checkpoint file was created 
+		10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
 
-Outputs:
-	1) model = A reference to the trained model
+	Outputs:
+		1) model = A reference to the trained model
 
 
-Function: Trains the model
-	1) If the task relatedness is greater than 0.85, the function uses the Learning without Forgetting method
-	2) If the task relatedness is lesser than 0.85, the function uses the normal finetuning procedure as outlined
-	   in the "Learning without Forgetting" paper ("https://arxiv.org/abs/1606.09282")
+	Function: Trains the model
+		1) If the task relatedness is greater than 0.85, the function uses the Learning without Forgetting method
+		2) If the task relatedness is lesser than 0.85, the function uses the normal finetuning procedure as outlined
+		   in the "Learning without Forgetting" paper ("https://arxiv.org/abs/1606.09282")
 
-   Whilst implementing finetuning procedure, PyTorch does not provide the option to only partially freeze the 
-   weights of a layer. In order to implement this idea, I manually zero the gradients from the older classes in
-   order to ensure that these weights do not have a learning signal from the loss function. 
+	   Whilst implementing finetuning procedure, PyTorch does not provide the option to only partially freeze the 
+	   weights of a layer. In order to implement this idea, I manually zero the gradients from the older classes in
+	   order to ensure that these weights do not have a learning signal from the loss function. 
 
-"""	
+	"""	
 	
 	model_number, best_relatedness = get_initial_model(feature_extractor, dset_loaders, encoder_criterion, use_gpu)
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") 
