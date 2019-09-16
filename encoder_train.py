@@ -96,6 +96,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 			running_loss = 0
 			
 			if (phase == "train"):
+				optimizer = exp_lr_scheduler(optimizer, epoch, lr)
 				model = model.train(True)
 			else:
 				model = model.train(False)
