@@ -19,7 +19,7 @@ def train_model(num_classes, optimizer, encoder_criterion, dset_loaders, dset_si
 		7) dset_size = Size of the dataset loaders
 		8) num_of_epochs = Number of epochs for which the model needs to be trained
 		9) checkpoint_file = A checkpoint file which can be used to resume training; starting from the epoch at 
-		   which the checkpoint file was created 
+			which the checkpoint file was created 
 		10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
 
 	Outputs:
@@ -29,11 +29,11 @@ def train_model(num_classes, optimizer, encoder_criterion, dset_loaders, dset_si
 	Function: Trains the model
 		1) If the task relatedness is greater than 0.85, the function uses the Learning without Forgetting method
 		2) If the task relatedness is lesser than 0.85, the function uses the normal finetuning procedure as outlined
-		   in the "Learning without Forgetting" paper ("https://arxiv.org/abs/1606.09282")
+			in the "Learning without Forgetting" paper ("https://arxiv.org/abs/1606.09282")
 
-	   Whilst implementing finetuning procedure, PyTorch does not provide the option to only partially freeze the 
-	   weights of a layer. In order to implement this idea, I manually zero the gradients from the older classes in
-	   order to ensure that these weights do not have a learning signal from the loss function. 
+		Whilst implementing finetuning procedure, PyTorch does not provide the option to only partially freeze the 
+		weights of a layer. In order to implement this idea, I manually zero the gradients from the older classes in
+		order to ensure that these weights do not have a learning signal from the loss function. 
 
 	"""	
 	
