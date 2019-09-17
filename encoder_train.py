@@ -5,8 +5,10 @@ import torch.optim as optim
 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils, models
+from torch.autograd import Variable
 
 from autoencoder import Autoencoder, Alexnet_FE
+from encoder_utils import *
 
 import os
 import warnings
@@ -15,7 +17,7 @@ import time
 warnings.filterwarnings("ignore")
 
 
-def add_autoencoder(input_dims, code_dims):
+def add_autoencoder(input_dims, code_dims = 100):
 
 	"""Inputs: 
 		1) input_dims = input_dims of the features being fed into the autoencoder. Check the
@@ -30,15 +32,15 @@ def add_autoencoder(input_dims, code_dims):
 		
 	autoencoder = Autoencoder(input_dims, code_dims)
 	og_path = os.getcwd()
-	dir = og_path + "/models/autoencoders/"
-	num_ae = len(next(os.walk(dir)[1]))
-	store_path = dir + "/autoencoder_"+str(num_ae+1)
+	directory_path = og_path + "/models/autoencoders"
+	num_ae = len(next(os.walk(directory_path))[1])
+	store_path = directory_path + "/autoencoder_"+str(num_ae+1)
 	os.mkdir(store_path)
 
 	return autoencoder, store_path
 
 
-def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu):
+def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu, lr = 0.003):
 	"""
 	Inputs:
 		1) model = A reference to the Autoencoder model that needs to be trained 
@@ -92,7 +94,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 		# The model is evaluated at each epoch and the best performing model 
 		# on the validation set is saved 
 
-		for phase in ["train", "val"]:
+		for phase in ["train", "test"]:
 			running_loss = 0
 			
 			if (phase == "train"):
@@ -113,7 +115,9 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 				# Input_to_ae is the features from the last convolutional layer
 				# of an Alexnet trained on Imagenet 
 
+				#input_data = F.sigmoid(input_data)
 				feature_extractor.to(device)
+				
 				input_to_ae = feature_extractor(input_data)
 				input_to_ae = input_to_ae.view(input_to_ae.size(0), -1)
 
@@ -121,6 +125,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 				model.zero_grad()
 
 				input_to_ae = input_to_ae.to(device)
+				input_to_ae = F.sigmoid(input_to_ae)
 				model.to(device)
 
 				outputs = model(input_to_ae)
@@ -135,7 +140,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 			epoch_loss = running_loss/dset_size[phase]
 
 			if(phase == "train"):
-				print('Epoch Loss:{}, Epoch Accuracy:{}'.format(epoch_loss, epoch_accuracy))
+				print('Epoch Loss:{}'.format(epoch_loss))
 				
 				#Creates a checkpoint every 5 epochs
 				if(epoch != 0 and (epoch+1) % 5 == 0):
@@ -157,7 +162,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 
 	elapsed_time = time.time()-since
 	print ("This procedure took {:.2f} minutes and {:.2f} seconds".format(elapsed_time//60, elapsed_time%60))
-	print ("The best performing model has a {:.2f} loss on the validation set".format(best_perform))
+	print ("The best performing model has a {:.2f} loss on the test set".format(best_perform))
 
 	return model
 
