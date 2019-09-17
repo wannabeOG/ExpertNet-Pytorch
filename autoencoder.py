@@ -26,7 +26,8 @@ class Alexnet_FE(nn.Module):
 	def __init__(self, alexnet_model):
 		super(Alexnet_FE, self).__init__()
 		self.fe_model = nn.Sequential(*list(alexnet_model.children())[0][:-2])
-
+		self.fe_model.train = False
+	
 	def forward(self, x):
 		return self.fe_model(x)
 
