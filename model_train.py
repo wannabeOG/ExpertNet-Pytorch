@@ -3,7 +3,7 @@ import os
 from torchvision import models
 
 from model_utils import *
-from autoencoder import GenModel
+from autoencoder import GeneralModelClass
 
 
 def train_model(num_classes, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu, alpha = 0.01):
@@ -61,7 +61,7 @@ def train_model(num_classes, optimizer, encoder_criterion, dset_loaders, dset_si
 		file1.close()
 
 	# Load the most related model into memory
-	model_init = GenModel(num_of_classes_old)
+	model_init = GeneralModelClass(num_of_classes_old)
 	model_init.load_state_dict(torch.load(path_to_dir+"/best_performing_model.pth", map_location = device))
 	
 	# Reference model to compute the soft scores for the LwF(Learning without Forgetting) method
@@ -88,6 +88,7 @@ def train_model(num_classes, optimizer, encoder_criterion, dset_loaders, dset_si
 					model_init = model_init.train(True)
 				else:
 					model_init = model_init.train(False)
+					model_init.eval()
 
 				for data in dset_loaders[phase]:
 					input_data, labels = data
@@ -128,7 +129,7 @@ def train_model(num_classes, optimizer, encoder_criterion, dset_loaders, dset_si
 				if(phase == "train"):
 					print('Epoch Loss:{}, Epoch Accuracy:{}'.format(epoch_loss, epoch_accuracy))
 
-					if(epoch != 0 and (epoch+1) % 5 == 0):
+					if(epoch != 0 and (epoch+1) % 10 == 0):
 						epoch_file_name = path +'/'+str(epoch+1)+'.pth.tar'
 						torch.save({
 						'epoch': epoch,

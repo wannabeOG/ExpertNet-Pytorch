@@ -17,7 +17,7 @@ import time
 warnings.filterwarnings("ignore")
 
 
-def add_autoencoder(input_dims, code_dims = 100):
+def add_autoencoder(input_dims = 256*13*13, code_dims = 100):
 
 	"""Inputs: 
 		1) input_dims = input_dims of the features being fed into the autoencoder. Check the
@@ -143,7 +143,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 				print('Epoch Loss:{}'.format(epoch_loss))
 				
 				#Creates a checkpoint every 5 epochs
-				if(epoch != 0 and (epoch+1) % 5 == 0):
+				if(epoch != 0 and (epoch+1) % 2 == 0):
 					epoch_file_name = path +'/'+str(epoch+1)+'.pth.tar'
 					torch.save({
 					'epoch': epoch,

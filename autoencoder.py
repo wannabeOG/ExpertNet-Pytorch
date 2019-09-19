@@ -2,10 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from torchvision import models
 
 class Autoencoder(nn.Module):
 
-	def __init__(self, input_dims, code_dims = 100):
+	def __init__(self, input_dims = 256*13*13, code_dims = 100):
 		super(Autoencoder, self).__init__()
 		self.encoder = nn.Sequential(
 		nn.Linear(input_dims, code_dims),
@@ -32,12 +33,12 @@ class Alexnet_FE(nn.Module):
 		return self.fe_model(x)
 
 
-class GenModel(nn.Module):
+class GeneralModelClass(nn.Module):
 	def __init__(self, classes):
-		super(GenModel, self).__init__()
-		self.model = models.alexnet(pretrained = True)
-		self.model.classifier[-1] = nn.Linear(self.model.classifier[-1].in_features, classes)
+		super(GeneralModelClass, self).__init__()
+		self.Tmodel = models.alexnet(pretrained = True)
+		self.Tmodel.classifier[-1] = nn.Linear(self.Tmodel.classifier[-1].in_features, classes)
 
 	def forward(self, x):
-		return self.model(x)
+		return self.Tmodel(x)
 
