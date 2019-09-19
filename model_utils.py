@@ -43,14 +43,10 @@ def get_initial_model(feature_extractor, dset_loaders, encoder_criterion, use_gp
 	model_number = -999
 	device = torch.device("cuda:0" if use_gpu else "cpu")
 	
-	model_path = destination + "/autoencoder_"+str(i+1) +"/best_performing_model.pth"
-	model = Autoencoder(input_dims)
-	model.load_state_dict(torch.load(model_path), map_location= device)
-	
 	for i in range(num_ae):
 		
 		model_path = destination + "/autoencoder_"+str(num_ae-i) +"/best_performing_model.pth"
-		model = Autoencoder(input_dims)
+		model = Autoencoder()
 		model.load_state_dict(torch.load(model_path), map_location= device)
 		
 	
@@ -67,6 +63,7 @@ def get_initial_model(feature_extractor, dset_loaders, encoder_criterion, use_gp
 
 			output = model(input_to_ae)
 			loss = encoder_criterion(outputs, input_data)
+			
 			if (i == 0): 
 				rerror_comp = loss
 			else:

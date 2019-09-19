@@ -6,7 +6,7 @@ import warnings
 from pathlib import Path
 import shutil
 
-from torch.utils.data import Dataset, Dataloader
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 
 def convert_tiny_imagenet(path):
@@ -39,14 +39,14 @@ def split_datasets_tiny_imagenet(base_path, dest_base_path):
 			#Train directory
 			for idir in os.listdir(path_to_file):
 			#Images directory = working_dir
-			working_dir = os.path.join(path_to_file, idir)
-			#dest_dir = os.path.join()
-			os.mkdir(dest_base_path + "/" + idir)
-			no_of_images, images_list = len(next(os.walk(working_dir))[2]), next(os.walk(working_dir))[2]
-			#indices = list(range(no_of_images))
-			no_of_val_images = math.floor(val_split*no_of_images)
-			for i in range(no_of_val_images):
-			shutil.move(os.path.join(working_dir,images_list[i]),dest_base_path + "/" + idir) 
+				working_dir = os.path.join(path_to_file, idir)
+				#dest_dir = os.path.join()
+				os.mkdir(dest_base_path + "/" + idir)
+				no_of_images, images_list = len(next(os.walk(working_dir))[2]), next(os.walk(working_dir))[2]
+				#indices = list(range(no_of_images))
+				no_of_val_images = math.floor(val_split*no_of_images)
+				for i in range(no_of_val_images):
+					shutil.move(os.path.join(working_dir,images_list[i]),dest_base_path + "/" + idir) 
 
 
 data_transforms = {
@@ -65,7 +65,7 @@ data_transforms = {
 }
 
 
-class GenDataset(Datsets):
+class GenDataset(Dataset):
 
 	def __init__(self, path):
 		super(GenDataset, self).__init__()
