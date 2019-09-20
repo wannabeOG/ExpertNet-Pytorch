@@ -1,4 +1,21 @@
-def task_metric(r_errror_comp, r_error_ref):
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms, utils, models
+from torch.autograd import Variable
+
+from autoencoder import Autoencoder, Alexnet_FE
+from encoder_utils import *
+
+import os
+import warnings
+import time
+
+
+def task_metric(r_error_comp, r_error_ref):
 	""" 
 	Inputs: 
 		1) r_error_comp = Reconstruction error for model 1
@@ -12,14 +29,14 @@ def task_metric(r_errror_comp, r_error_ref):
 	Function: This function returns the task metric
 
 	"""
-	return (1-(rerror_ref-r_error_comp)/r_error_comp)
+	return (1-((r_error_ref-r_error_comp)/r_error_comp))
 
 
 def kaiming_initilaization(layer):
 	nn.init.kaiming_normal_(layer.weight, nonlinearity='sigmoid')
 
 
-def get_initial_model(feature_extractor, dset_loaders, encoder_criterion, use_gpu):
+def get_initial_model(feature_extractor, dset_loaders, dataset_size, encoder_criterion, use_gpu):
 	""" 
 	Inputs: 
 		1) model_init = A reference to the model which needs to be initialized
@@ -41,40 +58,80 @@ def get_initial_model(feature_extractor, dset_loaders, encoder_criterion, use_gp
 	num_ae = len(next(os.walk(destination))[1])
 	best_relatedness = 0
 	model_number = -999
-	device = torch.device("cuda:0" if use_gpu else "cpu")
-	
+	device = torch.device("cuda:2" if use_gpu else "cpu")
+	running_loss = 0
+	feature_extractor = feature_extractor.to(device)
+
 	for i in range(num_ae):
 		
-		model_path = destination + "/autoencoder_"+str(num_ae-i) +"/best_performing_model.pth"
-		model = Autoencoder()
-		model.load_state_dict(torch.load(model_path), map_location= device)
+		#print ("This is the present model being evaluated", num_ae)	
 		
-	
-		feature_extractor.to(device)
+		model_path = destination + "/autoencoder_"+str(num_ae-i) +"/best_performing_model.pth"
+		model = Autoencoder(13*13*256)
+		
+		#print ("Loading the model")
+		model.load_state_dict(torch.load(model_path))
+		#print ("Loaded the model")
+		
+		model.to(device)
 		
 		model.train(False)
 
-		for data in dset_loaders:
+		for data in dset_loaders['train']:
+			#print ("The count is", count)
+			#count = count+1
+			input_data, labels = data
+			input_data = input_data.to(device)
 			
-			input_data, _ = data
-			input_data.to(device)
+			del data
+			del labels
+			
 			input_to_ae = feature_extractor(input_data)
 			input_to_ae = input_to_ae.view(input_to_ae.size(0), -1)
 
-			output = model(input_to_ae)
-			loss = encoder_criterion(outputs, input_data)
+			outputs = model(input_to_ae)
 			
-			if (i == 0): 
-				rerror_comp = loss
-			else:
-				relatedness = task_metric(loss, rerrror_comp)
-				
-				if (relatedness > best_relatedness):
-					best_relatedness = relatedness
-					model_number = (num_ae - i)
+			loss = encoder_criterion(outputs, input_to_ae)
+			
+			#print ("These steps are getting executed")
+			
+			#del model
+			#del feature_extractor
+			
+			#	del data
+			#	del input_data
+			#del labels
+		
+			del input_to_ae
+			del outputs
+			
+			#print ("Okay working")
 
+			running_loss = loss.item() + running_loss
 
-	return model_number, best_relatedness			
+		running_loss = running_loss/dataset_size['train']
+		
+		print ("So we don't reach here definintely")
+		del model
+
+		if (i == 0): 
+			rerror_comp = running_loss
+		
+		else:
+			
+			relatedness = task_metric(running_loss, rerror_comp)
+			
+			if (relatedness > best_relatedness):
+				best_relatedness = relatedness
+				model_number = (num_ae - i)
+	
+	del feature_extractor
+	del running_loss
+
+	print ("The Model number is ", model_number)
+	print ("The best relatedness is ", best_relatedness)
+
+	return model_number, best_relatedness		
 
 
 
