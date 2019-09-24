@@ -58,7 +58,7 @@ def get_initial_model(feature_extractor, dset_loaders, dataset_size, encoder_cri
 	num_ae = len(next(os.walk(destination))[1])
 	best_relatedness = 0
 	model_number = -999
-	device = torch.device("cuda:2" if use_gpu else "cpu")
+	device = torch.device("cuda:0" if use_gpu else "cpu")
 	running_loss = 0
 	feature_extractor = feature_extractor.to(device)
 
@@ -111,7 +111,8 @@ def get_initial_model(feature_extractor, dset_loaders, dataset_size, encoder_cri
 
 		running_loss = running_loss/dataset_size['train']
 		
-		print ("So we don't reach here definintely")
+		#print ("So we don't reach here, do we?")
+		
 		del model
 
 		if (i == 0): 
@@ -141,7 +142,8 @@ def initialize_new_model(model_init, num_classes, num_of_classes_old):
 		1) model_init = A reference to the model which needs to be initialized
 		2) num_classes = The number of classes in the new task for which we need to train a expert  
 		3) num_of_classes_old = The number of classes in the model that is used as a reference for
-		   initializing the new model.  
+		   initializing the new model.
+		4) flag = to indicate if best_relatedness is greater or less than 0.85     
 
 	Outputs:
 		1) autoencoder = A reference to the autoencoder object that is created 
@@ -152,10 +154,30 @@ def initialize_new_model(model_init, num_classes, num_of_classes_old):
 	method
 
 	"""	
-	weight_info = model_init.classifier[-1].weight.data
-	model_init.classifier[-1] = nn.Linear(model_init.classifier[-1].in_features, num_of_classes_old+num_classes)
-	kaiming_initilaization(model_init.classifier[-1])
-	model_init.classifier[-1].weight[:num_of_classes_old, :] = weight_info
+
+	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+	weight_info = model_init.Tmodel.classifier[-1].weight.data.to(device)
+	weight_info = weight_info.to(device)
+	#print (weight_info.shape)
+	model_init.Tmodel.classifier[-1] = nn.Linear(model_init.Tmodel.classifier[-1].in_features, num_of_classes_old + num_classes)
+	#print (weight_info.shape)
+	
+	#model_init.Tmodel.classifier[-1].weight[:num_of_classes_old, :] = weight_info
+
+	nn.init.kaiming_normal_(model_init.Tmodel.classifier[-1].weight, nonlinearity='sigmoid')
+	
+	#kaiming_initilaization()
+	model_init.Tmodel.classifier[-1].weight.data[:num_of_classes_old, :] = weight_info
+	
+	#print ("Inside Initialize model function")
+	
+	#print (model_init.Tmodel.classifier[-1].weight.type())
+	model_init.to(device)
+	#print (model_init.Tmodel.classifier[-1].weight.type())
+	model_init.train(True)
+	
+	#print (next(model_init.parameters()).is_cuda)
 	return model_init 
 
 
@@ -166,29 +188,57 @@ def model_criterion(preds, labels, flag, T = 2):
 		this parameter is used only when the flag option is set with the "Distill"
 		option
 	"""
+	device = torch.device("cuda:0" if torch.cuda.is_available else "cpu")
+
+	preds = preds.to(device)
+	labels = labels.to(device)
 
 	if(flag == "CE"):
 		loss = nn.CrossEntropyLoss()
 		return loss(preds, labels)
-
+	
 	elif(flag == "Distill"):
 		
-		""" The labels are the teacher scores or the reference
-			scores in this case
-		"""	
+		""" 
+		The labels are the teacher scores or the reference
+		scores in this case
 		
-		preds = F.softmax(preds)
-		labels = F.softmax(labels)
+		"""	
+		preds = preds.to(device)
+		labels = labels.to(device)
 
+		preds = F.softmax(preds, dim = 1)
+		labels = F.softmax(labels, dim = 1)
+		
 		preds = preds.pow(1/T)
 		labels = labels.pow(1/T)
 
 		sum_preds = torch.sum(preds, dim = 1)
 		sum_labels = torch.sum(preds, dim = 1)
 
-		sum_preds_ref = torch.t(torch.t(sum_preds).repeat(preds.size(1), 1))
-		sum_labels_ref = torch.t(torch.t(sum_labels).repeat(labels.size(1), 1))
+		sum_preds_ref = torch.transpose(sum_preds.repeat(preds.size(1), 1), 0, 1)
+		sum_preds_ref = sum_preds_ref.to(device)
+		
+		sum_labels_ref = torch.transpose(sum_labels.repeat(labels.size(1), 1), 0, 1)
+		sum_labels_ref = sum_labels_ref.to(device)
+		
+		preds = preds/sum_preds_ref
+		labels = labels/sum_labels_ref
+		
+		del sum_labels_ref
+		del sum_preds_ref
+		
+		del sum_preds
+		del sum_labels
 
-		loss = torch.sum(-1*sum_preds_ref*sum_labels_ref, dim = 1)
+		preds = preds.to(device)
+		labels = labels.to(device)
 
+		loss = torch.sum(-1*preds*torch.log(labels), dim = 1)
+		batch_size = loss.size()[0]
+
+		loss = torch.sum(loss, dim = 0)/batch_size
+		loss = loss.to(device)
+
+		#print (loss.type())
 		return loss
