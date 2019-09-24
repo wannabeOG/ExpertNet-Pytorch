@@ -155,6 +155,10 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 
 
 			else:
+				del labels
+				del input_data   
+				del preds
+				del loss
 				if (epoch_loss < best_perform):
 					best_perform = epoch_loss
 					torch.save(model.state_dict(), path + "/best_performing_model.pth")
