@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import torch
 torch.backends.cudnn.benchmark=True
 
@@ -11,13 +14,16 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 
 import argparse
-import 
 import numpy as np
 
 import copy
 
 from autoencoder import *
-from dataloader import *
+
+import os
+import sys
+
+sys.path.append(os.path.join(os.getcwd(), 'utils'))
 
 from encoder_train import *
 from encoder_utils import *
@@ -105,7 +111,7 @@ for task_number in range(1, no_of_tasks):
 				checkpoint_file_encoder = file
 	#######################################################################################
 	
-	if (flag = False): 
+	if (flag == False): 
 		checkpoint_file_encoder = ""
 
 		#get an autoencoder model and the path where the autoencoder model would be stored

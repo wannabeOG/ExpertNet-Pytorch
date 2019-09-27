@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import warnings
 import os
 from pathlib import Path
 import shutil
 
 import requests, zipfile, io
+
+import sys
+sys.path.append(os.path.join(os.getcwd(), 'utils'))
 
 
 def create_val_img_folder(dataset_dir):

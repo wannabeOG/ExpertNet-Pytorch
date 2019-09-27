@@ -1,20 +1,28 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+#!/usr/bin/env python
+# coding: utf-8
+
 import torch.optim as optim
 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils, models
 from torch.autograd import Variable
 
+import os
+
+import sys
+sys.path.append(os.path.join(os.getcwd(), 'utils'))
+
 from autoencoder import Autoencoder, Alexnet_FE
 from encoder_utils import *
 
-import os
 import warnings
 import time
 
 warnings.filterwarnings("ignore")
+
 
 
 def add_autoencoder(input_dims = 256*13*13, code_dims = 100):

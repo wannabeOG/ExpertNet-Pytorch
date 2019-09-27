@@ -1,11 +1,15 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import torch 
 import os
 from torchvision import models
-
-from model_utils import *
 from autoencoder import GeneralModelClass
 
 import copy
+
+import sys
+sys.path.append(os.path.join(os.getcwd(), 'utils'))
 
 def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders, dset_size, num_epochs, use_gpu, task_number, lr = 0.1, alpha = 0.01):
 	""" 
@@ -85,7 +89,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 					checkpoint_file = file
 		#######################################################################################
 		
-		if (flag = False): 
+		if (flag == False): 
 			checkpoint_file = ""
 
 		
