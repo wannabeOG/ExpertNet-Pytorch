@@ -39,20 +39,18 @@ def kaiming_initilaization(layer):
 def get_initial_model(feature_extractor, dset_loaders, dataset_size, encoder_criterion, use_gpu):
 	""" 
 	Inputs: 
-		1) feature_extractor = A reference to the model which needs to be initialized
-		2) dset_loaders = The number of classes in the new task for which we need to train a expert  
-		3) dataset_size = The number of classes in the model that is used as a reference for
-		   initializing the new model
-	   	4) encoder_criterion = The loss function for the encoders
-	   	5) use_gpu = Flag set to True if the GPU is to be used  
+		1) model_init = A reference to the model which needs to be initialized
+		2) num_classes = The number of classes in the new task for which we need to train a expert  
+		3) num_of_classes_old = The number of classes in the model that is used as a reference for
+		   initializing the new model.  
 
 	Outputs:
-		1) model_number = The number for the model that is most closely related to the present task  
-		2) best_relatedness = The relatedness this model task bears with the present task calculated as per
-			section 3.3 of the paper
+		1) autoencoder = A reference to the autoencoder object that is created 
+		2) store_path = Path to the directory where the trained model and the checkpoints will be stored
 
-	Function: Returns the model number that is most related to the present task and a metric that measures 
-	how related these two given tasks are
+	Function: This function takes in a reference model and initializes a new model with the reference model's
+	weights (for the old task) and the weights for the new task are initialized using the kaiming initialization
+	method
 
 	"""	
 	path = os.getcwd()

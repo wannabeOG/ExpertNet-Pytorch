@@ -40,7 +40,7 @@ def add_autoencoder(input_dims = 256*13*13, code_dims = 100):
 	return autoencoder, store_path
 
 
-def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu, lr = 0.003):
+def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, use_gpu, lr = 0.003):
 	"""
 	Inputs:
 		1) model = A reference to the Autoencoder model that needs to be trained 
@@ -56,9 +56,6 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 		   which the checkpoint file was created 
 		10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
 
-	Outputs:
-		1) model = A reference to the trained model
-
 
 	Function:
 		Returns a trained autoencoder model
@@ -69,13 +66,15 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 	num_of_classes = 0
 
-################################### Code for loading the checkpoint file ########################################
+	######################## Code for loading the checkpoint file #########################
 	
 	if (os.path.isfile(path + "/" + checkpoint_file)):
+		path_to_file = path + "/" + checkpoint_file
 		print ("Loading checkpoint '{}' ".format(checkpoint_file))
-		checkpoint = torch.load(resume)
+		checkpoint = torch.load(checkpoint_file)
 		start_epoch = checkpoint['epoch']
 		print ("Loading the model")
+		model = Autoencoder(256*13*13)
 		model = model.load_state_dict(checkpoint['state_dict'])
 		print ("Loading the optimizer")
 		optimizer = optimizer.load_state_dict(checkpoint['optimizer'])
@@ -83,7 +82,8 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 
 	else:
 		start_epoch = 0
-#################################################################################################################
+
+	##########################################################################################
 	
 
 	for epoch in range(start_epoch, num_epochs):
@@ -168,12 +168,4 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 	print ("This procedure took {:.2f} minutes and {:.2f} seconds".format(elapsed_time//60, elapsed_time%60))
 	print ("The best performing model has a {:.2f} loss on the test set".format(best_perform))
 
-	return model
-
-
 	
-
-
-	
-
-

@@ -5,7 +5,7 @@ def encoder_criterion(outputs, inputs):
 	loss = nn.MSELoss()
 	return loss(outputs, inputs)
 
-def exp_lr_scheduler(optimizer, epoch, init_lr=0.0008, lr_decay_epoch=5):
+def exp_lr_scheduler(optimizer, epoch, init_lr=0.0008, lr_decay_epoch=10):
 	"""
 	Decay learning rate by a factor of 0.1 every lr_decay_epoch epochs.
 	
