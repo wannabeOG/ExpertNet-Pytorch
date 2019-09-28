@@ -62,12 +62,14 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 	num_ae = len(next(os.walk(new_path))[1])
 
 	#If task_number is less than num_ae it suggests that the directory had already been created
-	if (task_number < num_ae):
+	if (task_number <= num_ae):
 		#Keeping it consistent with the usage of num_ae throughout this file
 		num_ae = task_number-1
 
 	
 	print ("Checking if a prior training file exists")
+	
+	#mypath is the path where the model is going to be stored
 	mypath = path + str(num_ae+1)
 
 	#The conditional if the directory already exists
@@ -105,15 +107,19 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 		######################## Code for loading the checkpoint file #########################
 		
-		if (os.path.isfile(path + "/" + checkpoint_file)):
+		if (os.path.isfile(mypath + "/" + checkpoint_file)):
+			
 			print ("Loading checkpoint '{}' ".format(checkpoint_file))
 			checkpoint = torch.load(checkpoint_file)
 			start_epoch = checkpoint['epoch']
+			
 			print ("Loading the model")
 			model_init = GeneralModelClass(num_of_classes_old + num_classes)
 			model_init = model_init.load_state_dict(checkpoint['state_dict'])
+			
 			print ("Loading the optimizer")
 			optimizer = optimizer.load_state_dict(checkpoint['optimizer'])
+			
 			print ("Done")
 
 		else:
@@ -128,7 +134,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 
 	# Store the number of classes in the file for future use
-		with open(os.path.join(path + str(num_ae+1), 'classes.txt'), 'w') as file1:
+		with open(os.path.join(mypath, 'classes.txt'), 'w') as file1:
 			input_to_txtfile = str(new_classes)
 			file1.write(input_to_txtfile)
 			file1.close()
@@ -180,95 +186,86 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 			
 			print ("Epoch {}/{}".format(epoch+1, num_epochs))
 			print ("-"*20)
+			
+			print ("The training phase is ongoing".format(phase))
+			
+			running_loss = 0
+			
+			#scales the optimizer every 10 epochs 
+			optimizer = exp_lr_scheduler(optimizer, epoch, lr)
+			model_init = model_init.train(True)
+			
+			for data in dset_loaders:
+				input_data, labels = data
 
-			for phase in ["train", "test"]:
+				del data
+
+				if (use_gpu):
+					input_data = Variable(input_data.to(device))
+					labels = Variable(labels.to(device)) 
 				
-				print ("The {}ing phase is ongoing".format(phase))
-				
-				running_loss = 0
-				
-				if (phase == "train"):
-					#scales the optimizer every 10 epochs 
-					optimizer = exp_lr_scheduler(optimizer, epoch, lr)
-					model_init = model_init.train(True)
 				else:
-					model_init = model_init.train(False)
-					model_init.eval()
+					input_data  = Variable(input_data)
+					labels = Variable(labels)
+				
+				model_init.to(device)
+				ref_model.to(device)
+				
+				output = model_init(input_data)
+				ref_output = ref_model(input_data)
 
-				for data in dset_loaders[phase]:
-					input_data, labels = data
+				del input_data
 
-					del data
+				optimizer.zero_grad()
+				model_init.zero_grad()
 
-					if (use_gpu):
-						input_data = Variable(input_data.to(device))
-						labels = Variable(labels.to(device)) 
-					
-					else:
-						input_data  = Variable(input_data)
-						labels = Variable(labels)
-					
-					#model_init.to(device)
-					#ref_model.to(device)
-					
-					output = model_init(input_data)
-					ref_output = ref_model(input_data)
+				# loss_1 only takes in the outputs from the nodes of the old classes 
 
-					del input_data
+				loss1_output = output[:, :num_of_classes_old]
+				loss2_output = output[:, num_of_classes_old:]
 
-					optimizer.zero_grad()
-					model_init.zero_grad()
+				del output
 
-					# loss_1 only takes in the outputs from the nodes of the old classes 
+				loss_1 = model_criterion(loss1_output, ref_output, flag = "Distill")
+				
+				del ref_output
+				
+				# loss_2 takes in the outputs from the nodes that were initialized for the new task
+				
+				loss_2 = model_criterion(loss2_output, labels, flag = "CE")
+				
+				del labels
+				#del output
 
-					loss1_output = output[:, :num_of_classes_old]
-					loss2_output = output[:, num_of_classes_old:]
+				total_loss = alpha*loss_1 + loss_2
 
-					del output
+				del loss_1
+				del loss_2
 
-					loss_1 = model_criterion(loss1_output, ref_output, flag = "Distill")
-					
-					del ref_output
-					
-					# loss_2 takes in the outputs from the nodes that were initialized for the new task
-					
-					loss_2 = model_criterion(loss2_output, labels, flag = "CE")
-					
-					del labels
-					#del output
+				
+				total_loss.backward()
+				optimizer.step()
 
-					total_loss = alpha*loss_1 + loss_2
-
-					del loss_1
-					del loss_2
-
-					if (phase == "train"):	
-						total_loss.backward()
-						optimizer.step()
-
-					running_loss += total_loss.item()
-					
-				epoch_loss = running_loss/dset_size[phase]
-
-				if(phase == "train"):
-					print('Epoch Loss:{}'.format(epoch_loss))
-
-					if(epoch != 0 and (epoch+1) % 10 == 0):
-						epoch_file_name = path_to_model +'/'+str(epoch+1)+'.pth.tar'
-						torch.save({
-						'epoch': epoch,
-						'epoch_loss': epoch_loss, 
-						'model_state_dict': model_init.state_dict(),
-						'optimizer_state_dict': optimizer.state_dict(),
-
-						}, epoch_file_name)
+				running_loss += total_loss.item()
+				
+			epoch_loss = running_loss/dset_size
 
 
-				else:
-					if (epoch_loss < best_perform):
-						best_perform = epoch_loss
-						torch.save(model_init.state_dict(), path_to_model + "/best_performing_model.pth")
-	
+			print('Epoch Loss:{}'.format(epoch_loss))
+
+			if(epoch != 0 and epoch != num_of_epochs -1 and (epoch+1) % 10 == 0):
+				epoch_file_name = os.path.join(mypath, str(epoch+1)+'.pth.tar')
+				torch.save({
+				'epoch': epoch,
+				'epoch_loss': epoch_loss, 
+				'model_state_dict': model_init.state_dict(),
+				'optimizer_state_dict': optimizer.state_dict(),
+
+				}, epoch_file_name)
+
+
+		torch.save(model_init.state_dict(), mypath + "/best_performing_model.pth")		
+		
 		del model_init
 		del ref_model
 	
@@ -279,76 +276,66 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 		
 		for epoch in range(start_epoch, num_epochs):
 
-
 			print ("Epoch {}/{}".format(epoch+1, num_epochs))
-			print ("-"*10)
+			print ("-"*20)
 
-			for phase in ["train", "test"]:
-				running_loss = 0
+			optimizer = exp_lr_scheduler(optimizer, epoch, lr)
+			model_init = model_init.train(True)
+			
+			running_loss = 0
+			
+			for data in dset_loaders:
+				input_data, labels = data
+				del data
 
-				if (phase == "train"):
-					optimizer = exp_lr_scheduler(optimizer, epoch, lr)
-					model_init = model_init.train(True)
+				if (use_gpu):
+					input_data = Variable(input_data.to(device))
+					labels = Variable(labels.to(device)) 
+				
 				else:
-					model_init = model_init.train(False)
+					input_data  = Variable(input_data)
+					labels = Variable(labels)
 
-				for data in dset_loaders[phase]:
-					input_data, labels = data
-					del data
+				#Shifts the model to the device
+				model_init.to(device)
 
-					if (use_gpu):
-						input_data = Variable(input_data.to(device))
-						labels = Variable(labels.to(device)) 
-					
-					else:
-						input_data  = Variable(input_data)
-						labels = Variable(labels)
+				output = model_init(input_data)
+				
+				del input_data
+				#del output
+				
+				optimizer.zero_grad()
+				model_init.zero_grad()
+				
+				#Implemented as explained in the doc string
+				loss = model_criterion(output[num_of_classes_old:], labels)
 
-					#Shifts the model to the device
-					model_init.to(device)
+				del output
+				del labels
 
-					output = model_init(input_data)
-					
-					del input_data
-					#del output
-					
-					optimizer.zero_grad()
-					model_init.zero_grad()
-					
-					#Implemented as explained in the doc string
-					loss = model_criterion(output[num_of_classes_old:], labels)
+				loss.backward()
+				# Zero the gradients from the older classes
+				model_init.Tmodel.classifier[-1].weight.grad[:num_of_classes_old,:] = 0  
+				optimizer.step()
 
-					del output
-					del labels
+				running_loss += loss.item()
+				
+			epoch_loss = running_loss/dset_size[phase]
 
-					if (phase == "train"):	
-						loss.backward()
-						# Zero the gradients from the older classes
-						model_init.Tmodel.classifier[-1].weight.grad[:num_of_classes_old,:] = 0  
-						optimizer.step()
+			print('Epoch Loss:{}'.format(epoch_loss))
 
-					running_loss += loss.item()
-					
-				epoch_loss = running_loss/dset_size[phase]
+			if(epoch != 0 and (epoch+1) % 5 == 0 and epoch != num_of_epochs -1):
+				epoch_file_name = os.path.join(path_to_model, str(epoch+1)+'.pth.tar')
+				torch.save({
+				'epoch': epoch,
+				'epoch_loss': epoch_loss, 
+				'model_state_dict': model_init.state_dict(),
+				'optimizer_state_dict': optimizer.state_dict(),
 
-				if(phase == "train"):
-					print('Epoch Loss:{}'.format(epoch_loss))
-
-					if(epoch != 0 and (epoch+1) % 5 == 0):
-						epoch_file_name = path_to_model +'/'+str(epoch+1)+'.pth.tar'
-						torch.save({
-						'epoch': epoch,
-						'epoch_loss': epoch_loss, 
-						'model_state_dict': model_init.state_dict(),
-						'optimizer_state_dict': optimizer.state_dict(),
-
-						}, epoch_file_name)
+				}, epoch_file_name)
 
 
-				else:
-					if (epoch_loss < best_perform):
-						best_perform = epoch_loss
-						torch.save(model_init.state_dict(), path_to_model + "/best_performing_model.pth")
+		torch.save(model_init.state_dict(), mypath + "/best_performing_model.pth")
 
 		del model_init
 		del ref_model

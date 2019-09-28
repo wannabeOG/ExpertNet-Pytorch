@@ -40,8 +40,10 @@ def add_autoencoder(input_dims = 256*13*13, code_dims = 100):
 		
 	autoencoder = Autoencoder(input_dims, code_dims)
 	og_path = os.getcwd()
+
 	directory_path = og_path + "/models/autoencoders"
 	num_ae = len(next(os.walk(directory_path))[1])
+
 	store_path = directory_path + "/autoencoder_"+str(num_ae+1)
 	os.mkdir(store_path)
 
@@ -102,75 +104,66 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 		# The model is evaluated at each epoch and the best performing model 
 		# on the validation set is saved 
 
-		for phase in ["train", "test"]:
-			running_loss = 0
+		running_loss = 0
+		
+		optimizer = exp_lr_scheduler(optimizer, epoch, lr)
+		model = model.train(True)
+		
+		for data in dset_loaders:
+			input_data, labels = data
+
+			del labels
+			del data
+
+			if (use_gpu):
+				input_data = Variable(input_data.to(device)) 
 			
-			if (phase == "train"):
-				optimizer = exp_lr_scheduler(optimizer, epoch, lr)
-				model = model.train(True)
 			else:
-				model = model.train(False)
+				input_data  = Variable(input_data)
 
-			for data in dset_loaders[phase]:
-				input_data, labels = data
+			# Input_to_ae is the features from the last convolutional layer
+			# of an Alexnet trained on Imagenet 
 
-				if (use_gpu):
-					input_data = Variable(input_data.to(device)) 
-				
-				else:
-					input_data  = Variable(input_data)
-
-				# Input_to_ae is the features from the last convolutional layer
-				# of an Alexnet trained on Imagenet 
-
-				#input_data = F.sigmoid(input_data)
-				feature_extractor.to(device)
-				
-				input_to_ae = feature_extractor(input_data)
-				input_to_ae = input_to_ae.view(input_to_ae.size(0), -1)
-
-				optimizer.zero_grad()
-				model.zero_grad()
-
-				input_to_ae = input_to_ae.to(device)
-				input_to_ae = F.sigmoid(input_to_ae)
-				model.to(device)
-
-				outputs = model(input_to_ae)
-				loss = encoder_criterion(outputs, input_to_ae)
-
-				if (phase == "train"):	
-					loss.backward()
-					optimizer.step()
-
-				running_loss += loss.item()
+			#input_data = F.sigmoid(input_data)
+			feature_extractor.to(device)
 			
-			epoch_loss = running_loss/dset_size[phase]
+			input_to_ae = feature_extractor(input_data)
+			input_to_ae = input_to_ae.view(input_to_ae.size(0), -1)
 
-			if(phase == "train"):
-				print('Epoch Loss:{}'.format(epoch_loss))
-				
-				#Creates a checkpoint every 5 epochs
-				if(epoch != 0 and (epoch+1) % 2 == 0):
-					epoch_file_name = path +'/'+str(epoch+1)+'.pth.tar'
-					torch.save({
-					'epoch': epoch,
-					'epoch_loss': epoch_loss, 
-					'model_state_dict': model.state_dict(),
-					'optimizer_state_dict': optimizer.state_dict(),
+			optimizer.zero_grad()
+			model.zero_grad()
 
-					}, epoch_file_name)
+			input_to_ae = input_to_ae.to(device)
+			input_to_ae = F.sigmoid(input_to_ae)
+			model.to(device)
+
+			outputs = model(input_to_ae)
+			loss = encoder_criterion(outputs, input_to_ae)
+
+			loss.backward()
+			optimizer.step()
+
+			running_loss += loss.item()
+		
+		epoch_loss = running_loss/dset_size
+
+		
+		print('Epoch Loss:{}'.format(epoch_loss))
+			
+		#Creates a checkpoint every 5 epochs
+		if(epoch != 0 and (epoch+1) % 5 == 0 and epoch != num_of_epochs - 1):
+			epoch_file_name = os.path.join(path, str(epoch+1)+'.pth.tar')
+			torch.save({
+			'epoch': epoch,
+			'epoch_loss': epoch_loss, 
+			'model_state_dict': model.state_dict(),
+			'optimizer_state_dict': optimizer.state_dict(),
+
+			}, epoch_file_name)
 
 
-			else:
-				del labels
-				del input_data   
-				del preds
-				del loss
-				if (epoch_loss < best_perform):
-					best_perform = epoch_loss
-					torch.save(model.state_dict(), path + "/best_performing_model.pth")
-
+		
+	torch.save(model.state_dict(), path + "/best_performing_model.pth")
 
 	elapsed_time = time.time()-since
 	print ("This procedure took {:.2f} minutes and {:.2f} seconds".format(elapsed_time//60, elapsed_time%60))

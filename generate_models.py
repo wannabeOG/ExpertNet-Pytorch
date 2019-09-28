@@ -32,7 +32,7 @@ from model_train import *
 from model_utils import *
 
 
-parser = argparse.ArgumentParser(description='Test file')
+parser = argparse.ArgumentParser(description='Generate models file')
 parser.add_argument('--init_lr', default=0.1, type=float, help='Init learning rate')
 parser.add_argument('--num_epochs_encoder', default=15, type=int, help='Number of epochs you want the encoder model to train on')
 parser.add_argument('--num_epochs_model', default=40, type=int, help='Number of epochs you want  model to train on')
@@ -82,9 +82,9 @@ for task_number in range(1, no_of_tasks):
 
 	path_task = data_path + "/Task_" + str(task_number+1)
 
-	image_folder = datasets.ImageFolder(path_task + "/" + 'train', transform = data_transforms[x])
+	image_folder = datasets.ImageFolder(path_task + "/" + 'train', transform = data_transforms['train'])
 
-	dset_size = len(image_folder['train'])
+	dset_size = len(image_folder)
 
 	device = torch.device("cuda:0" if use_gpu else "cpu")
 
