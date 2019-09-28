@@ -4,6 +4,7 @@ Expert Gate: Lifelong Learning with a Network of Experts
 Code for the Paper
 
 **[Expert Fate: Lifelong Learning with a Network of Experts][7]**
+<br />
 Rahaf Aljundi, Punarjay Chakravarty, Tinne Tuytelaars
 [CVPR 2017]
 
@@ -26,7 +27,7 @@ Lifelong Machine Learning, or LML, considers systems that can learn many tasks o
 
 The problem of Catastrophic Inference or Catstrophic Forgetting is one of the major hurdles facing this domain where the performance of the model inexplicably declines on the older tasks once the newer tasks are introduced into the learning pipeline. 
 
-![Expert Gate Architecture](https://imgur.com/wjcZIZS)
+![Expert Gate Architecture](https://i.imgur.com/0F9gR7P.png)
 
 This paper advocates the use of seperate "experts" for each task such that each expert is called into action when
 it faces a training sample that is pertinent to the task on which it is the "expert". They theorize that a shared model would be unable to account for the nuances of each task and hence lead to a performance degradation on
@@ -38,8 +39,7 @@ In order to help distinguish between these tasks, the paper proposes to train a 
 Requisites
 -----------------------------
 
-* PyTorch
-  Use the instructions that are outlined on [PyTorch Homepage][1] for installing PyTorch 
+* PyTorch: Use the instructions that are outlined on [PyTorch Homepage][1] for installing PyTorch 
 
 
 
@@ -99,9 +99,7 @@ python3 download_datasets.py
 
 ```
 
-This will download the tiny-imagenet dataset to the Data folder and split it into 4 tasks with each task consisting of 50 classes each. The directory structure of the downloaded datasets would be: [^10]
-
-[^10]: Classes have been collapsed for brevity
+This will download the tiny-imagenet dataset to the Data folder and split it into 4 tasks with each task consisting of 50 classes each. The directory structure of the downloaded datasets would be: 
 
 ```
 Data
