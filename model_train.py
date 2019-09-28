@@ -10,6 +10,7 @@ import copy
 
 import sys
 sys.path.append(os.path.join(os.getcwd(), 'utils'))
+from model_utils import *
 
 def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders, dset_size, num_epochs, use_gpu, task_number, lr = 0.1, alpha = 0.01):
 	""" 
@@ -39,21 +40,17 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 	print ("Determining the most related model")
 	model_number, best_relatedness = get_initial_model(feature_extractor, dset_loaders, dset_size, encoder_criterion, use_gpu)
 	device = torch.device("cuda:0" if use_gpu else "cpu") 
-	
-
 	# Load the most related model in the memory and finetune the model
 	new_path = os.getcwd() + "/models/trained_models"
 	path = os.getcwd() + "/models/trained_models/model_"
 	path_to_dir = path + str(model_number) 
-	
-	#Get the number of classes in the related model
 	file_name = path_to_dir + "/classes.txt" 
 	file_object = open(file_name, 'r')
 	
 	num_of_classes_old = file_object.read()
 	file_object.close()
 	num_of_classes_old = int(num_of_classes_old)
-	
+
 	#Create a variable to store the new number of classes that this model is exposed to
 	new_classes = num_of_classes_old + num_classes
 	
@@ -178,15 +175,12 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 	if (best_relatedness > 0.85):
 
 		print ("Using the LwF approach")
-
-		for epoch in range(start_epoch, num_epochs):
-			
+		for epoch in range(start_epoch, num_epochs):			
 			since = time.time()
 			best_perform = 10e6
 			
 			print ("Epoch {}/{}".format(epoch+1, num_epochs))
 			print ("-"*20)
-			
 			print ("The training phase is ongoing".format(phase))
 			
 			running_loss = 0
@@ -266,6 +260,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 		torch.save(model_init.state_dict(), mypath + "/best_performing_model.pth")		
 		
+
 		del model_init
 		del ref_model
 	
@@ -275,6 +270,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 		print ("Using the finetuning approach")
 		
 		for epoch in range(start_epoch, num_epochs):
+
 
 			print ("Epoch {}/{}".format(epoch+1, num_epochs))
 			print ("-"*20)

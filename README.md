@@ -26,7 +26,7 @@ Lifelong Machine Learning, or LML, considers systems that can learn many tasks o
 
 The problem of Catastrophic Inference or Catstrophic Forgetting is one of the major hurdles facing this domain where the performance of the model inexplicably declines on the older tasks once the newer tasks are introduced into the learning pipeline. 
 
-![Expert Gate Architecture](repo_utils/Expert_gate_architecture.png)
+![Expert Gate Architecture](https://imgur.com/wjcZIZS)
 
 This paper advocates the use of seperate "experts" for each task such that each expert is called into action when
 it faces a training sample that is pertinent to the task on which it is the "expert". They theorize that a shared model would be unable to account for the nuances of each task and hence lead to a performance degradation on

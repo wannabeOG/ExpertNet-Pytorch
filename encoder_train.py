@@ -1,9 +1,9 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 #!/usr/bin/env python
 # coding: utf-8
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 
 from torch.utils.data import Dataset, DataLoader
@@ -23,8 +23,6 @@ import time
 
 warnings.filterwarnings("ignore")
 
-
-
 def add_autoencoder(input_dims = 256*13*13, code_dims = 100):
 
 	"""Inputs: 
@@ -40,17 +38,16 @@ def add_autoencoder(input_dims = 256*13*13, code_dims = 100):
 		
 	autoencoder = Autoencoder(input_dims, code_dims)
 	og_path = os.getcwd()
-
 	directory_path = og_path + "/models/autoencoders"
 	num_ae = len(next(os.walk(directory_path))[1])
-
 	store_path = directory_path + "/autoencoder_"+str(num_ae+1)
 	os.mkdir(store_path)
 
 	return autoencoder, store_path
 
 
-def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, use_gpu, lr = 0.003):
+
+def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criterion, dset_loaders, dset_size, num_epochs, checkpoint_file, use_gpu, lr = 0.003):
 	"""
 	Inputs:
 		1) model = A reference to the Autoencoder model that needs to be trained 
@@ -65,7 +62,6 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 		9) checkpoint_file = A checkpoint file which can be used to resume training; starting from the epoch at 
 		   which the checkpoint file was created 
 		10) use_gpu = A flag which would be set if the user has a CUDA enabled device 
-
 
 	Function:
 		Returns a trained autoencoder model
@@ -94,7 +90,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 		start_epoch = 0
 
 	##########################################################################################
-	
+
 
 	for epoch in range(start_epoch, num_epochs):
 
@@ -103,6 +99,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 
 		# The model is evaluated at each epoch and the best performing model 
 		# on the validation set is saved 
+
 
 		running_loss = 0
 		
@@ -169,4 +166,3 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 	print ("This procedure took {:.2f} minutes and {:.2f} seconds".format(elapsed_time//60, elapsed_time%60))
 	print ("The best performing model has a {:.2f} loss on the test set".format(best_perform))
 
-	
