@@ -124,7 +124,7 @@ python3 generate_models.py
 Next to assess how well the model adapts to the different tasks at hand, execute the following lines to generate the final scores
 
 ```sh
-python3 test_2.py
+python3 test_models.py
 
 ```
 
