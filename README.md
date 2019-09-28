@@ -72,18 +72,17 @@ The file takes the following arguments
 
 Once you invoke the **`main.py`** file with the appropriate arguments, the following things shall happen
 
-1) The Autoencoder model is trained on the features of the last convolutional layer of an Alexnet model (the preprocessing steps are as detailed in section 3.1 of the paper) and the model is stored in **`./models/autoencoders`** with the appropriate task number. The facility to restart training from a given checkpoint is provided so as to protect agianst abrupt failures whilst training
+1. The Autoencoder model is trained on the features of the last convolutional layer of an Alexnet model (the preprocessing steps are as detailed in ``section 3.1`` of the paper) and the model is stored in **`./models/autoencoders`** with the appropriate task number. The facility to restart training from a given checkpoint is provided so as to protect agianst abrupt failures whilst training
 
-2) After an autoencoder model is trained, a search is carried out over the already existing autoencoders to determine the "expert" which is most closely related to the new task using the task-relatedness metric described in section 3.3 of the paper
+2. After an autoencoder model is trained, a search is carried out over the already existing autoencoders to determine the "expert" which is most closely related to the new task using the task-relatedness metric described in `section 3.3` of the paper
 
-3) After the appropriate model is decided upon, there are two ways to train this model depending on the task-relatedness value as described in section 3.3 of the paper:
-
-	a) LwF approach: Use the method outlined in the [Learning Without Forgetting][8] paper when the value for the task-relatedness is greater than 0.85
-	b) Finetuning: If the value if less than 0.85 proceed with the finetuning approach as described in [Learning Without Forgetting][8] 
+3. After the appropriate model is decided upon, there are two ways to train this model depending on the task-relatedness value as described in `section 3.3` of the paper:
+	* LwF approach: Use the method outlined in the [Learning Without Forgetting][8] paper when the value for the task-relatedness is greater than 0.85
+	* Finetuning: If the value if less than 0.85 proceed with the finetuning approach as described in [Learning Without Forgetting][8] 
 
    The implementation comes with a slight caveat: PyTorch does not allow setting the *train* attribute of some weights in a layer to `True` and the could be set to `False` and some weights could be set to `True`. In order to implement this idea, the gradients for these weights are manually set to zero so as to ensure that these weights don't train
 
-4) The final model is stored in /models/trained_models with a text file `classes.txt` which describe the number of classes that the model was exposed to in this particular task
+4. The final model is stored in /models/trained_models with a text file `classes.txt` which describe the number of classes that the model was exposed to in this particular task
 
 Refer to the docstrings and the inline comments that are made in `encoder_train.py` and `model_train.py` for a more detailed view
 
