@@ -57,20 +57,20 @@ The [Tiny-Imagenet][6] dataset was used and the 200 odd classses were split into
 Training
 ------------------------------
 
-Training a model on a given task takes place using the **`main.py`** file. Simply execute the following lines to begin the training process
+Execute the following lines of code (along with the necessary arguments) to generate to generate the expert models for the 4 tasks
 
-```sh
-python3 main.py
+```sh 
+python3 generate_models.py 
 ```
-
 The file takes the following arguments
 
-* ***data_file***: Path to the data folder to train the model on. **Default**: Empty
 * ***init_lr***: Initial learning rate for the model. The learning rate is decayed every 5 epochs.**Default**: 0.1 
-* ***num_epochs***: Number of epochs you want to train the model for. **Default**: 40
-* ***batch_size***: Batch Size. **Default**: 8
+* ***num_epochs_encoder***: Number of epochs you want to train the encoder model for. **Default**: 15
+* ***num_epochs_model***: Number of epochs you want to train the model for. **Default**: 40
+* ***batch_size***: Batch Size. **Default**: 16
+* ***use_gpu***: Set the GPU flag to ``True`` to use the GPU. **Default**: ``False``
 
-Once you invoke the **`main.py`** file with the appropriate arguments, the following things shall happen
+Once you invoke the **`generate_models.py`** file with the appropriate arguments, the following things shall happen
 
 1. The Autoencoder model is trained on the features of the last convolutional layer of an Alexnet model (the preprocessing steps are as detailed in ``section 3.1`` of the paper) and the model is stored in **`./models/autoencoders`** with the appropriate task number. The facility to restart training from a given checkpoint is provided so as to protect agianst abrupt failures whilst training
 
@@ -109,21 +109,17 @@ Data
 
 ```
 
+Train the model as detailed in the procedure outlined in the Training Section
 
-Execute the following lines of code to generate to generate the expert models for the 4 tasks
-
-```sh 
-cd ../
-python3 generate_models.py
-
-``` 
-
-Next to assess how well the model adapts to the different tasks at hand, execute the following lines to generate the final scores
+Next to assess how well the model adapts to a particular task at hand, execute the following lines to generate the final scores (along with the arguments)
 
 ```sh
 python3 test_models.py
-
 ```
+
+* ***task_number***: Select the task you want to test out the ensemble with; choose from 1-4 **Default**: 1
+* ***use_gpu***: Set the GPU flag to ``True`` to use the GPU. **Default**: ``False``
+
 
 References
 ----------
