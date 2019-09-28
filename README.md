@@ -26,7 +26,7 @@ Lifelong Machine Learning, or LML, considers systems that can learn many tasks o
 
 The problem of Catastrophic Inference or Catstrophic Forgetting is one of the major hurdles facing this domain where the performance of the model inexplicably declines on the older tasks once the newer tasks are introduced into the learning pipeline. 
 
-![Expert Gate Architecture](repo_utils/Expert_gate_architecture.png)
+![Expert Gate Architecture](https://imgur.com/wjcZIZS)
 
 This paper advocates the use of seperate "experts" for each task such that each expert is called into action when
 it faces a training sample that is pertinent to the task on which it is the "expert". They theorize that a shared model would be unable to account for the nuances of each task and hence lead to a performance degradation on
@@ -56,6 +56,8 @@ The [Tiny-Imagenet][6] dataset was used and the 200 odd classses were split into
 
 Training
 ------------------------------
+
+Download the first model from this [link][11] and place it in the `models` folder. This is because the paper assumes that the first expert is an Alexnet model pretrained on the ImageNet and the rest of this implementation is built on this assumption.
 
 Training a model on a given task takes place using the **`main.py`** file. Simply execute the following lines to begin the training process
 
@@ -154,3 +156,4 @@ BSD
 [8]: https://arxiv.org/abs/1606.09282
 [9]: https://arxiv.org/abs/1503.02531
 [10]: https://github.com/rahafaljundi/Expert-Gate
+[11]: https://drive.google.com/drive/folders/1wi1FLUovQHbG3Y8wherIxYvIDAsNbNq_?usp=sharing

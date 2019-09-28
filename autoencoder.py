@@ -7,7 +7,6 @@ import torch.nn.functional as F
 
 from torchvision import models
 
-
 class Autoencoder(nn.Module):
 
 	def __init__(self, input_dims = 256*13*13, code_dims = 100):
