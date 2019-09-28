@@ -93,9 +93,7 @@ Evaluating the model
 To recreate the experiments performed, first execute the following lines of code
 
 ```sh
-cd Data
-python3 download_datasets.py
-
+python3 data_prep.py
 ```
 
 This will download the tiny-imagenet dataset to the Data folder and split it into 4 tasks with each task consisting of 50 classes each. The directory structure of the downloaded datasets would be: 
