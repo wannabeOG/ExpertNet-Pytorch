@@ -156,6 +156,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 		
 		#model_init.to(device)
+		
 		print ("Initializing an Adam optimizer")
 		optimizer = optim.Adam(model_init.Tmodel.parameters(), lr = 0.003, weight_decay= 0.0001)
 
