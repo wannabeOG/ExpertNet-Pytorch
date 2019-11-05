@@ -123,9 +123,6 @@ def convert_to_tasks(path, number_of_tasks):
 	shutil.rmtree(os.path.join(path, 'tiny-imagenet-200'))
 
 
-p
-rint ("Hello what the fuck")
-
 #Create the Data directory 
 path_to_file = os.getcwd() + "/Data"
 os.mkdir(path_to_file)

@@ -4,7 +4,8 @@ Expert Gate: Lifelong Learning with a Network of Experts
 Code for the Paper
 
 **[Expert Fate: Lifelong Learning with a Network of Experts][7]**
-Rahaf Aljundi, Punarjay Chakravarty, Tinne Tuytelaars
+<br />
+Rahaf Aljundi, Punarjay Chakravarty, Tinne Tuytelaars\
 [CVPR 2017]
 
 If you find this code useful, please consider citing the original work by authors:
@@ -26,7 +27,7 @@ Lifelong Machine Learning, or LML, considers systems that can learn many tasks o
 
 The problem of Catastrophic Inference or Catstrophic Forgetting is one of the major hurdles facing this domain where the performance of the model inexplicably declines on the older tasks once the newer tasks are introduced into the learning pipeline. 
 
-![Expert Gate Architecture](https://imgur.com/wjcZIZS)
+![Expert Gate Architecture](https://i.imgur.com/0F9gR7P.png)
 
 This paper advocates the use of seperate "experts" for each task such that each expert is called into action when
 it faces a training sample that is pertinent to the task on which it is the "expert". They theorize that a shared model would be unable to account for the nuances of each task and hence lead to a performance degradation on
@@ -38,8 +39,7 @@ In order to help distinguish between these tasks, the paper proposes to train a 
 Requisites
 -----------------------------
 
-* PyTorch
-  Use the instructions that are outlined on [PyTorch Homepage][1] for installing PyTorch 
+* PyTorch: Use the instructions that are outlined on [PyTorch Homepage][1] for installing PyTorch 
 
 
 
@@ -56,36 +56,36 @@ The [Tiny-Imagenet][6] dataset was used and the 200 odd classses were split into
 
 Training
 ------------------------------
-
 Download the first model from this [link][11] and place it in the `models` folder. This is because the paper assumes that the first expert is an Alexnet model pretrained on the ImageNet and the rest of this implementation is built on this assumption.
 
 Training a model on a given task takes place using the **`main.py`** file. Simply execute the following lines to begin the training process
 
-```sh
-python3 main.py
-```
+Execute the following lines of code (along with the necessary arguments) to generate to generate the expert models for the 4 tasks
 
+```sh 
+python3 generate_models.py 
+```
 The file takes the following arguments
 
-* ***data_file***: Path to the data folder to train the model on. **Default**: Empty
 * ***init_lr***: Initial learning rate for the model. The learning rate is decayed every 5 epochs.**Default**: 0.1 
-* ***num_epochs***: Number of epochs you want to train the model for. **Default**: 40
-* ***batch_size***: Batch Size. **Default**: 8
+* ***num_epochs_encoder***: Number of epochs you want to train the encoder model for. **Default**: 15
+* ***num_epochs_model***: Number of epochs you want to train the model for. **Default**: 40
+* ***batch_size***: Batch Size. **Default**: 16
+* ***use_gpu***: Set the GPU flag to ``True`` to use the GPU. **Default**: ``False``
 
-Once you invoke the **`main.py`** file with the appropriate arguments, the following things shall happen
+Once you invoke the **`generate_models.py`** file with the appropriate arguments, the following things shall happen
 
-1) The Autoencoder model is trained on the features of the last convolutional layer of an Alexnet model (the preprocessing steps are as detailed in section 3.1 of the paper) and the model is stored in **`./models/autoencoders`** with the appropriate task number. The facility to restart training from a given checkpoint is provided so as to protect agianst abrupt failures whilst training
+1. The Autoencoder model is trained on the features of the last convolutional layer of an Alexnet model (the preprocessing steps are as detailed in ``section 3.1`` of the paper) and the model is stored in **`./models/autoencoders`** with the appropriate task number. The facility to restart training from a given checkpoint is provided so as to protect agianst abrupt failures whilst training
 
-2) After an autoencoder model is trained, a search is carried out over the already existing autoencoders to determine the "expert" which is most closely related to the new task using the task-relatedness metric described in section 3.3 of the paper
+2. After an autoencoder model is trained, a search is carried out over the already existing autoencoders to determine the "expert" which is most closely related to the new task using the task-relatedness metric described in `section 3.3` of the paper
 
-3) After the appropriate model is decided upon, there are two ways to train this model depending on the task-relatedness value as described in section 3.3 of the paper:
-
-	a) LwF approach: Use the method outlined in the [Learning Without Forgetting][8] paper when the value for the task-relatedness is greater than 0.85
-	b) Finetuning: If the value if less than 0.85 proceed with the finetuning approach as described in [Learning Without Forgetting][8] 
+3. After the appropriate model is decided upon, there are two ways to train this model depending on the task-relatedness value as described in `section 3.3` of the paper:
+	* LwF approach: Use the method outlined in the [Learning Without Forgetting][8] paper when the value for the task-relatedness is greater than 0.85
+	* Finetuning: If the value if less than 0.85 proceed with the finetuning approach as described in [Learning Without Forgetting][8] 
 
    The implementation comes with a slight caveat: PyTorch does not allow setting the *train* attribute of some weights in a layer to `True` and the could be set to `False` and some weights could be set to `True`. In order to implement this idea, the gradients for these weights are manually set to zero so as to ensure that these weights don't train
 
-4) The final model is stored in /models/trained_models with a text file `classes.txt` which describe the number of classes that the model was exposed to in this particular task
+4. The final model is stored in /models/trained_models with a text file `classes.txt` which describe the number of classes that the model was exposed to in this particular task
 
 Refer to the docstrings and the inline comments that are made in `encoder_train.py` and `model_train.py` for a more detailed view
 
@@ -96,14 +96,10 @@ Evaluating the model
 To recreate the experiments performed, first execute the following lines of code
 
 ```sh
-cd Data
-python3 download_datasets.py
-
+python3 data_prep.py
 ```
 
-This will download the tiny-imagenet dataset to the Data folder and split it into 4 tasks with each task consisting of 50 classes each. The directory structure of the downloaded datasets would be: [^10]
-
-[^10]: Classes have been collapsed for brevity
+This will download the tiny-imagenet dataset to the Data folder and split it into 4 tasks with each task consisting of 50 classes each. The directory structure of the downloaded datasets would be: 
 
 ```
 Data
@@ -116,21 +112,17 @@ Data
 
 ```
 
+Train the model as detailed in the procedure outlined in the Training Section
 
-Execute the following lines of code to generate to generate the expert models for the 4 tasks
-
-```sh 
-cd ../
-python3 generate_models.py
-
-``` 
-
-Next to assess how well the model adapts to the different tasks at hand, execute the following lines to generate the final scores
+Next to assess how well the model adapts to a particular task at hand, execute the following lines to generate the final scores (along with the arguments)
 
 ```sh
-python3 test_2.py
-
+python3 test_models.py
 ```
+
+* ***task_number***: Select the task you want to test out the ensemble with; choose from 1-4 **Default**: 1
+* ***use_gpu***: Set the GPU flag to ``True`` to use the GPU. **Default**: ``False``
+
 
 References
 ----------
@@ -157,3 +149,4 @@ BSD
 [9]: https://arxiv.org/abs/1503.02531
 [10]: https://github.com/rahafaljundi/Expert-Gate
 [11]: https://drive.google.com/drive/folders/1wi1FLUovQHbG3Y8wherIxYvIDAsNbNq_?usp=sharing
+
