@@ -11,6 +11,9 @@ import requests, zipfile, io
 import sys
 sys.path.append(os.path.join(os.getcwd(), 'utils'))
 
+import time
+
+since = time.time()
 
 def create_val_img_folder(dataset_dir):
 	'''
@@ -87,6 +90,7 @@ def convert_tiny_imagenet(path):
 			else:
 				os.remove(path)
 
+
 def convert_to_tasks(path, number_of_tasks):
 	"""
 	This function converts the dataset into 4 tasks with 50 classes each. Each Task has a seperate
@@ -107,11 +111,10 @@ def convert_to_tasks(path, number_of_tasks):
 		#Create a train and a test directory
 		target_path_train = os.path.join(target_path, "train")
 		target_path_test = os.path.join(target_path, "test")
-		
 		os.mkdir(target_path_train)
 		os.mkdir(target_path_test)
 		
-		
+		#loop over the classes and shift the folders one step up the hierarchy
 		for i in range(50):
 			a = list_dir_train.pop(0)
 			b = list_dir_test.pop(0)
@@ -138,8 +141,14 @@ path_to_dataset = path_to_file + "/tiny-imagenet-200"
 
 #Prep the Data now
 file_list = ['train', 'test', 'val', 'wnids.txt', 'words.txt']
-for dir in directory_list:
-	convert_tiny_imagenet(path_to_dataset + "/" + 'words.txt')
+
+for file_sp in file_list:
+	convert_tiny_imagenet(path_to_dataset + "/" + file_sp)
+
 
 #Divide the dataset into 4 tasks
 convert_to_tasks(path_to_file, 4)
+
+total_time = time.time()-since
+
+print ("This process took {} minutes and {} seconds to execute".format(total_time//60, total_time%60))
