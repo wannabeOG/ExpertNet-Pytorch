@@ -13,10 +13,10 @@ import torch.nn.functional as F
 from torchvision import models
 
 class Autoencoder(nn.Module):
-"""
-The class defines the autoencoder model which takes in the features from the last convolutional layer of the 
-Alexnet model. The default value for the input_dims is 256*13*13.
-"""
+	"""
+	The class defines the autoencoder model which takes in the features from the last convolutional layer of the 
+	Alexnet model. The default value for the input_dims is 256*13*13.
+	"""
 	def __init__(self, input_dims = 256*13*13, code_dims = 100):
 		super(Autoencoder, self).__init__()
 		self.encoder = nn.Sequential(
@@ -35,10 +35,10 @@ Alexnet model. The default value for the input_dims is 256*13*13.
 
 
 class Alexnet_FE(nn.Module):
-"""
-Create a feature extractor model from an Alexnet architecture, that is used to train the autoencoder model
-and get the most related model whilst training a new task in a sequence
-"""
+	"""
+	Create a feature extractor model from an Alexnet architecture, that is used to train the autoencoder model
+	and get the most related model whilst training a new task in a sequence
+	"""
 	def __init__(self, alexnet_model):
 		super(Alexnet_FE, self).__init__()
 		self.fe_model = nn.Sequential(*list(alexnet_model.children())[0][:-2])
