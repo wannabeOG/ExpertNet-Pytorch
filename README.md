@@ -53,12 +53,12 @@ The original paper uses [Caltech-UCSD Birds][2], [MIT Scenes][3] and [Oxford Flo
 
 The [Tiny-Imagenet][6] dataset was used and the 200 odd classses were split into 4 tasks with 50 classes being assigned to each task randomly. This division can also be arbitrary and no speciaal consideration has been given to the decision to split the dataset evenly. Each of these tasks has a "train" and a "test" folder to validate the performance on these wide ranging tasks.
 
+The purpose behind using the MNIST dataset was to introduce some tasks that were significantly different to the ones in the Tiny Imagenet dataset. This is an attempt to recreate the setting of the original paper on a lower scale
+
 
 Training
 ------------------------------
-Download the first model from this [link][11] and place it in the `models` folder. This is because the paper assumes that the first expert is an Alexnet model pretrained on the ImageNet and the rest of this implementation is built on this assumption.
-
-Training a model on a given task takes place using the **`main.py`** file. Simply execute the following lines to begin the training process
+Training a model on a given task takes place using the **`generate_models.py`** file. Simply execute the following lines to begin the training process
 
 Execute the following lines of code (along with the necessary arguments) to generate to generate the expert models for the 4 tasks
 
@@ -68,8 +68,8 @@ python3 generate_models.py
 The file takes the following arguments
 
 * ***init_lr***: Initial learning rate for the model. The learning rate is decayed every 5 epochs.**Default**: 0.1 
-* ***num_epochs_encoder***: Number of epochs you want to train the encoder model for. **Default**: 15
-* ***num_epochs_model***: Number of epochs you want to train the model for. **Default**: 40
+* ***num_epochs_encoder***: Number of epochs you want to train the encoder model for. **Default**: 5
+* ***num_epochs_model***: Number of epochs you want to train the model for. **Default**: 15
 * ***batch_size***: Batch Size. **Default**: 16
 * ***use_gpu***: Set the GPU flag to ``True`` to use the GPU. **Default**: ``False``
 
@@ -89,6 +89,10 @@ Once you invoke the **`generate_models.py`** file with the appropriate arguments
 
 Refer to the docstrings and the inline comments that are made in `encoder_train.py` and `model_train.py` for a more detailed view
 
+### MAKE SURE THAT YOU TRAIN THE MODEL FOR ATLEAST 10 EPOCHS BUT ALSO KEEP IT BELOW 25 EPOCHS
+
+Training procedure is really volatile, and these were the boundaries that I could find. I did not carry out an extensive search over the optimum number of epochs and these boundaries were obtained from initial tests. For this range, the loss function **atleast returned a numerical value**, however even in this case, if the model gets stuck in a bad optimum, the loss function starts giving out NaN values and this snowballs into the model not learning at all.  
+
 
 Evaluating the model
 -------------------------------
@@ -96,10 +100,13 @@ Evaluating the model
 To recreate the experiments performed, first execute the following lines of code
 
 ```sh
-python3 data_prep.py
+cd data_utils
+python3 data_prep_tin.py
+python3 data_prep_mninst.py
+cd ../
 ```
 
-This will download the tiny-imagenet dataset to the Data folder and split it into 4 tasks with each task consisting of 50 classes each. The directory structure of the downloaded datasets would be: 
+This will download the tiny-imagenet dataset (TIN) and the MNIST dataset to the Data folder and split it into 4 + 5 tasks with each task consisting of 50 classes (TIN) + 2 classes (MNIST) each. The directory structure of the downloaded datasets would be: 
 
 ```
 Data
@@ -120,8 +127,42 @@ Next to assess how well the model adapts to a particular task at hand, execute t
 python3 test_models.py
 ```
 
-* ***task_number***: Select the task you want to test out the ensemble with; choose from 1-4 **Default**: 1
 * ***use_gpu***: Set the GPU flag to ``True`` to use the GPU. **Default**: ``False``
+
+Results
+--------------------------------------
+
+My system could not handle all the number of tasks in this sequence (9 in all) and it frequently froze up before completion. The test_models module is `O(number_of_tasks X number_of_tasks X sizeof(task))`. This is necessary since for each task we need to search over all the autoencoders created for the best performing model and activate the corresponding trained_model over which the final epoch_accuracy is calculated. Due to this, I manually cut the number of classes in each of the TIN dataset to 25 and used only one of the task from the MNIST dataset. It is quite clear from the architecture proposed in this paper that this is not optimum. 
+
+**Another key caveat** is that in all these trained models that are derived from the Alexnet architecture, only the last two convolutional layers and the classification layers are being trained. The rest of the layers are frozen and hence are not trained and the results are reported for this setting
+
+The present `test_models.py` is written assuming that your system can handle all the tasks in the full seqeunce. Please make the necessary changes to make the testing procedure compatible with your compuatational requirements. 
+
+The results reported are for this particular setting [Number of epochs used for training: 15]:
+
+**Input_Task_Number**: The task that was fed to the model\
+**Model_activated**: The model that was identifed for this task. The correct model was identified in these cases\
+**Accuracy**: Has been rounded to the nearest two decimals [number of right labels identfied]
+
+
+| Input Task_number| Model activated | Accuracy (in %)|
+| :------------: | :----------: | -----------: |
+|       3        |       3      |    63        |
+|       1        |       1      |    64        |
+|       5        |       5      |    59        |
+|       2        |       2      |    54        |
+|       4        |       4      |    69        |
+
+
+Final Takeaways
+--------------------------------
+The ideas proposed in this model; loads only the required model into memory at inference. However it is a really expensive procedure to search over all the autoencoders to identify the correct model and this situation will only get worse with an increasing number of tasks. Clearly this would not scale to much longer sequences. It is also not clear how the authors stabilized the training procedure for the **"Learning without Forgetting"** approach.
+
+
+To-Do's for this Project
+---------------------------------
+-[ ] Figure out ways to stablize the training procedure, have isolated the problem to the distillation loss calculation
+
 
 
 References
