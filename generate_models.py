@@ -39,6 +39,8 @@ from encoder_utils import *
 from model_train import *
 from model_utils import *
 
+from Initial_model_train import *
+
 #define the parser
 parser = argparse.ArgumentParser(description='Generate models file')
 parser.add_argument('--init_lr', default=0.1, type=float, help='Init learning rate')
@@ -57,7 +59,7 @@ batch_size = args.batch_size
 lr = args.init_lr
 
 #number of tasks in the sequence
-no_of_tasks = 9
+no_of_tasks = 4
 
 #transforms for the tiny-imagenet dataset. Applicable for the tasks 1-4
 data_transforms_tin = {
@@ -94,17 +96,22 @@ pretrained_alexnet = models.alexnet(pretrained = True)
 #Derives a feature extractor model from the Alexnet model
 feature_extractor = Alexnet_FE(pretrained_alexnet)
 
-#shuffle the items in a list so that mnist tasks and tiny imagenet tasks are iterspersed
-task_number = shuffle([x for x in range(1, no_of_tasks+1)])
+#shuffle the items in a list so that mnist tasks and tiny imagenet tasks are iterspersed, uncomment these lines
+#if you are also using MNIST dataset
+
+#task_number = shuffle([x for x in range(1, 9+1)])
+
+#Replace the "range(1, no_of_tasks+1)" in the for loop with task_numbe list
 
 #shuffle over the tasks
 for task_number in range(1, no_of_tasks+1):
 	
+	print ("Task Number {}".format(task_number))
 	data_path = os.getcwd() + "/Data"
 	encoder_path = os.getcwd() + "/models/autoencoders"
 	#model_path = os.getcwd() + "/models/trained_models"
 
-	path_task = data_path + "/Task_" + str(task_number+1)
+	path_task = data_path + "/Task_" + str(task_number)
 	
 	if (task_number >=1 and task_number <=4 ):
 		image_folder = datasets.ImageFolder(path_task + "/" + 'train', transform = data_transforms_tin['train'])
@@ -121,35 +128,45 @@ for task_number in range(1, no_of_tasks+1):
 
 	mypath = encoder_path + "/autoencoder_" + str(task_number)
 
-	############ check for the latest checkpoint file in the autoencoder ################
-	onlyfiles = [f for f in os.listdir(mypath) if os.isfile(os.join(mypath, f))]
-	max_train = -1
-	flag = False
+	if os.path.isdir(mypath):
+		############ check for the latest checkpoint file in the autoencoder ################
+		onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+		max_train = -1
+		flag = False
 
-	model = Autoencoder(256*13*13)
-	
-	store_path = mypath
-	
-	for file in onlyfiles:
-		if(file.endswith('pth.tr')):
-			flag = True
-			test_epoch = int(file[0])
-			if(test_epoch > max_train): 
-				max_epoch = test_epoch
-				checkpoint_file_encoder = file
-	#######################################################################################
-	
-	if (flag == False): 
+		model = Autoencoder(256*13*13)
+		
+		store_path = mypath
+		
+		for file in onlyfiles:
+			if(file.endswith('pth.tr')):
+				flag = True
+				test_epoch = int(file[0])
+				if(test_epoch > max_train): 
+					max_epoch = test_epoch
+					checkpoint_file_encoder = file
+		#######################################################################################
+		
+		if (flag == False): 
+			checkpoint_file_encoder = ""
+
+	else:
 		checkpoint_file_encoder = ""
 
-		#get an autoencoder model and the path where the autoencoder model would be stored
-		model, store_path = add_autoencoder(256*13*13)
+	#get an autoencoder model and the path where the autoencoder model would be stored
+	model, store_path = add_autoencoder(256*13*13, 100, task_number)
 
-		#Define an optimizer for this model 
-		optimizer_encoder = optim.Adam(model.parameters(), lr = 0.003, weight_decay= 0.0001)
+	#Define an optimizer for this model 
+	optimizer_encoder = optim.Adam(model.parameters(), lr = 0.003, weight_decay= 0.0001)
 
+	print ("Reached here for {}".format(task_number))
+	print ()
 	#Training the autoencoder
-	autoencoder_train(model, feature_extractor, store_path, optimizer_encoder, encoder_criterion, dataloaders, dataset_sizes, num_epochs_encoder, checkpoint_file_encoder, use_gpu)
+	autoencoder_train(model, feature_extractor, store_path, optimizer_encoder, encoder_criterion, dset_loaders, dset_size, num_epochs_encoder, checkpoint_file_encoder, use_gpu)
 
 	#Train the model
-	train_model(image_folder.classes, feature_extractor, encoder_criterion, dset_loaders, dset_size, num_epochs_model , True, task_number+1, lr = lr)
+	if(task_number == 1):
+		train_model_1(len(image_folder.classes), feature_extractor, encoder_criterion, dset_loaders, dset_size, num_epochs_model , True, task_number,  lr = lr)
+	
+	else:	
+		train_model(len(image_folder.classes), feature_extractor, encoder_criterion, dset_loaders, dset_size, num_epochs_model , True, task_number,  lr = lr)

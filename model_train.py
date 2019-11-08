@@ -37,9 +37,11 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 	"""	
 	
+	device = torch.device("cuda:0" if use_gpu else "cpu")
+
 	print ("Determining the most related model")
 	model_number, best_relatedness = get_initial_model(feature_extractor, dset_loaders, dset_size, encoder_criterion, use_gpu)
-	device = torch.device("cuda:0" if use_gpu else "cpu") 
+	
 	# Load the most related model in the memory and finetune the model
 	new_path = os.getcwd() + "/models/trained_models"
 	path = os.getcwd() + "/models/trained_models/model_"
@@ -55,8 +57,8 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 	new_classes = num_of_classes_old + num_classes
 	
 	#Check the number of models that already exist
-
 	num_ae = len(next(os.walk(new_path))[1])
+	#num_ae = 0
 
 	#If task_number is less than num_ae it suggests that the directory had already been created
 	if (task_number <= num_ae):
@@ -100,8 +102,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 		ref_model = copy.deepcopy(model_init)
 		ref_model.train(False)
 		ref_model.to(device)
-		del model_init
-
+		
 		######################## Code for loading the checkpoint file #########################
 		
 		if (os.path.isfile(mypath + "/" + checkpoint_file)):
@@ -124,6 +125,8 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 		##########################################################################################
 
+
+
 	#Will have to create a new directory since it does not exist at the moment
 	else:
 		print ("Creating the directory for the new model")
@@ -139,8 +142,14 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 	# Load the most related model into memory
 	
 		print ("Loading the most related model")
+		model_init = GeneralModelClass(num_of_classes_old)
 		model_init.load_state_dict(torch.load(path_to_dir+"/best_performing_model.pth"))
 		print ("Model loaded")
+
+		#Create (Recreate) the ref_model that has to be used
+		ref_model = copy.deepcopy(model_init)
+		ref_model.train(False)
+		ref_model.to(device)
 
 		for param in model_init.Tmodel.classifier.parameters():
 			param.requires_grad = True
@@ -156,6 +165,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 		
 		#model_init.to(device)
+		print ()
 		print ("Initializing an Adam optimizer")
 		optimizer = optim.Adam(model_init.Tmodel.parameters(), lr = 0.003, weight_decay= 0.0001)
 
@@ -181,7 +191,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 			
 			print ("Epoch {}/{}".format(epoch+1, num_epochs))
 			print ("-"*20)
-			print ("The training phase is ongoing".format(phase))
+			print ("The training phase is ongoing")
 			
 			running_loss = 0
 			

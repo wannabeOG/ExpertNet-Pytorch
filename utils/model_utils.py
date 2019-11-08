@@ -91,7 +91,7 @@ def get_initial_model(feature_extractor, dset_loaders, dataset_size, encoder_cri
 		
 		model.train(False)
 
-		for data in dset_loaders['train']:
+		for data in dset_loaders:
 			#print ("The count is", count)
 			#count = count+1
 			input_data, labels = data
@@ -123,7 +123,7 @@ def get_initial_model(feature_extractor, dset_loaders, dataset_size, encoder_cri
 
 			running_loss = loss.item() + running_loss
 
-		running_loss = running_loss/dataset_size['train']
+		running_loss = running_loss/dataset_size
 		
 		#print ("So we don't reach here, do we?")
 		

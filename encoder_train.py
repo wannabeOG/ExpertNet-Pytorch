@@ -23,7 +23,7 @@ import time
 
 warnings.filterwarnings("ignore")
 
-def add_autoencoder(input_dims = 256*13*13, code_dims = 100):
+def add_autoencoder(input_dims = 256*13*13, code_dims = 100, task_no = -1):
 
 	"""Inputs: 
 		1) input_dims = input_dims of the features being fed into the autoencoder. Check the
@@ -39,8 +39,8 @@ def add_autoencoder(input_dims = 256*13*13, code_dims = 100):
 	autoencoder = Autoencoder(input_dims, code_dims)
 	og_path = os.getcwd()
 	directory_path = og_path + "/models/autoencoders"
-	num_ae = len(next(os.walk(directory_path))[1])
-	store_path = directory_path + "/autoencoder_"+str(num_ae+1)
+	#num_ae = len(next(os.walk(directory_path))[1])
+	store_path = directory_path + "/autoencoder_"+str(task_no)
 	os.mkdir(store_path)
 
 	return autoencoder, store_path
@@ -148,7 +148,7 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 		print('Epoch Loss:{}'.format(epoch_loss))
 			
 		#Creates a checkpoint every 5 epochs
-		if(epoch != 0 and (epoch+1) % 5 == 0 and epoch != num_of_epochs - 1):
+		if(epoch != 0 and (epoch+1) % 5 == 0 and epoch != num_epochs - 1):
 			epoch_file_name = os.path.join(path, str(epoch+1)+'.pth.tar')
 			torch.save({
 			'epoch': epoch,
@@ -165,4 +165,5 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 	elapsed_time = time.time()-since
 	print ("This procedure took {:.2f} minutes and {:.2f} seconds".format(elapsed_time//60, elapsed_time%60))
 	print ("The best performing model has a {:.2f} loss on the test set".format(best_perform))
+	print ()
 
