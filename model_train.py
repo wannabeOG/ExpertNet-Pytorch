@@ -151,6 +151,8 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 		ref_model.train(False)
 		ref_model.to(device)
 
+		#print (ref_model)
+
 		for param in model_init.Tmodel.classifier.parameters():
 			param.requires_grad = True
 
@@ -176,13 +178,17 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 		#Actually makes the changes to the model_init, so slightly redundant
 		print ("Initializing the model to be trained")
 		model_init = initialize_new_model(model_init, num_classes, num_of_classes_old)
-		model_init.to(device)
+		#print (model_init)
+		#model_init.to(device)
 		start_epoch = 0
 
 	#The training process format or LwF (Learning without Forgetting)
 	# Add the start epoch code 
 	
 	if (best_relatedness > 0.85):
+
+		model_init.to(device)
+		ref_model.to(device)
 
 		print ("Using the LwF approach")
 		for epoch in range(start_epoch, num_epochs):			
@@ -197,7 +203,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 			
 			#scales the optimizer every 10 epochs 
 			optimizer = exp_lr_scheduler(optimizer, epoch, lr)
-			model_init = model_init.train(True)
+			#model_init = model_init.train(True)
 			
 			for data in dset_loaders:
 				input_data, labels = data
@@ -212,32 +218,27 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 					input_data  = Variable(input_data)
 					labels = Variable(labels)
 				
-				model_init.to(device)
-				ref_model.to(device)
-				
 				output = model_init(input_data)
 				ref_output = ref_model(input_data)
-
 				del input_data
 
 				optimizer.zero_grad()
-				model_init.zero_grad()
 
 				# loss_1 only takes in the outputs from the nodes of the old classes 
 
 				loss1_output = output[:, :num_of_classes_old]
 				loss2_output = output[:, num_of_classes_old:]
 
+				print ()
+
 				del output
 
 				loss_1 = model_criterion(loss1_output, ref_output, flag = "Distill")
-				
 				del ref_output
 				
 				# loss_2 takes in the outputs from the nodes that were initialized for the new task
 				
 				loss_2 = model_criterion(loss2_output, labels, flag = "CE")
-				
 				del labels
 				#del output
 
@@ -257,7 +258,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 			print('Epoch Loss:{}'.format(epoch_loss))
 
-			if(epoch != 0 and epoch != num_of_epochs -1 and (epoch+1) % 10 == 0):
+			if(epoch != 0 and epoch != num_epochs -1 and (epoch+1) % 10 == 0):
 				epoch_file_name = os.path.join(mypath, str(epoch+1)+'.pth.tar')
 				torch.save({
 				'epoch': epoch,
@@ -277,6 +278,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 	#Process for finetuning the model
 	else:
 		
+		model_init.to(device)
 		print ("Using the finetuning approach")
 		
 		for epoch in range(start_epoch, num_epochs):
@@ -302,9 +304,6 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 					input_data  = Variable(input_data)
 					labels = Variable(labels)
 
-				#Shifts the model to the device
-				model_init.to(device)
-
 				output = model_init(input_data)
 				
 				del input_data
@@ -314,7 +313,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 				model_init.zero_grad()
 				
 				#Implemented as explained in the doc string
-				loss = model_criterion(output[num_of_classes_old:], labels)
+				loss = model_criterion(output[num_of_classes_old:], labels, flag = 'CE')
 
 				del output
 				del labels
@@ -330,7 +329,7 @@ def train_model(num_classes, feature_extractor, encoder_criterion, dset_loaders,
 
 			print('Epoch Loss:{}'.format(epoch_loss))
 
-			if(epoch != 0 and (epoch+1) % 5 == 0 and epoch != num_of_epochs -1):
+			if(epoch != 0 and (epoch+1) % 5 == 0 and epoch != num_epochs -1):
 				epoch_file_name = os.path.join(path_to_model, str(epoch+1)+'.pth.tar')
 				torch.save({
 				'epoch': epoch,

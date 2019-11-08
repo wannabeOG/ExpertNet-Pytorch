@@ -1,3 +1,7 @@
+"""
+Module to train the model for the first task. Seperated from the rest of the code for the purpose of clarity
+"""
+
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -13,7 +17,22 @@ sys.path.append(os.path.join(os.getcwd(), 'utils'))
 from model_utils import *
 
 def train_model_1(num_classes, feature_extractor, encoder_criterion, dset_loaders, dset_size, num_epochs, use_gpu, task_number, lr = 0.1, alpha = 0.01):
+	""" 
+	Inputs: 
+		1) num_classes = The number of classes in the new task  
+		2) feature_extractor = A reference to the feature extractor model  
+		3) encoder_criterion = The loss criterion for training the Autoencoder
+		4) dset_loaders = Dataset loaders for the model
+		5) dset_size = Size of the dataset loaders
+		6) num_of_epochs = Number of epochs for which the model needs to be trained
+		7) use_gpu = A flag which would be set if the user has a CUDA enabled device
+		8) task_number = A number which represents the task for which the model is being trained
+		9) lr = initial learning rate for the model
+		10) alpha = Tradeoff factor for the loss   
 
+	Function: Trains the model on the first task specifically
+		
+	"""
 	since = time.time()
 	best_perform = 10e6
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -84,20 +103,10 @@ def train_model_1(num_classes, feature_extractor, encoder_criterion, dset_loader
 			optimizer.zero_grad()
 			#model_init.zero_grad()
 
-			# loss_1 only takes in the outputs from the nodes of the old classes 
-
-			#loss1_output = output[:, :num_of_classes_old]
-			#loss2_output = output[:, num_of_classes_old:]
-	
 			loss = model_criterion(output, labels, flag = "CE")
 			
 			del labels
 			#del output
-
-			#total_loss = alpha*loss_1 + loss_2
-
-			#del loss_1
-			#del loss_2
 
 			loss.backward()
 			optimizer.step()
@@ -109,7 +118,7 @@ def train_model_1(num_classes, feature_extractor, encoder_criterion, dset_loader
 
 		print('Epoch Loss:{}'.format(epoch_loss))
 
-		if(epoch != 0 and epoch != num_of_epochs -1 and (epoch+1) % 10 == 0):
+		if(epoch != 0 and epoch != num_epochs -1 and (epoch+1) % 10 == 0):
 			epoch_file_name = os.path.join(mypath, str(epoch+1)+'.pth.tar')
 			torch.save({
 			'epoch': epoch,

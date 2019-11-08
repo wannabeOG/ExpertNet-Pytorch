@@ -39,7 +39,7 @@ from encoder_utils import *
 from model_train import *
 from model_utils import *
 
-from Initial_model_train import *
+from initial_model_train import *
 
 #define the parser
 parser = argparse.ArgumentParser(description='Generate models file')
@@ -167,6 +167,5 @@ for task_number in range(1, no_of_tasks+1):
 	#Train the model
 	if(task_number == 1):
 		train_model_1(len(image_folder.classes), feature_extractor, encoder_criterion, dset_loaders, dset_size, num_epochs_model , True, task_number,  lr = lr)
-	
 	else:	
 		train_model(len(image_folder.classes), feature_extractor, encoder_criterion, dset_loaders, dset_size, num_epochs_model , True, task_number,  lr = lr)

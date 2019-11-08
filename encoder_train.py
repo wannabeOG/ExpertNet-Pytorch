@@ -164,6 +164,6 @@ def autoencoder_train(model, feature_extractor, path, optimizer, encoder_criteri
 
 	elapsed_time = time.time()-since
 	print ("This procedure took {:.2f} minutes and {:.2f} seconds".format(elapsed_time//60, elapsed_time%60))
-	print ("The best performing model has a {:.2f} loss on the test set".format(best_perform))
+	#print ("The best performing model has a {:.2f} loss on the test set".format(best_perform))
 	print ()
 
