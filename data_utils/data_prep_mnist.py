@@ -31,7 +31,7 @@ task_dict = {'0': '5', '1': '5',
 
 
 #path to the data file, already been created
-path_to_file = os.getcwd() + "/Data"
+path_to_file =  "../Data"
 
 
 #zip file url

@@ -127,7 +127,7 @@ def convert_to_tasks(path, number_of_tasks):
 
 
 #Create the Data directory 
-path_to_file = os.getcwd() + "/Data"
+path_to_file = "../Data"
 os.mkdir(path_to_file)
 
 #Code to download the dataset to the folder
