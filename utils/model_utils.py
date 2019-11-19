@@ -226,14 +226,14 @@ def model_criterion(preds, labels, flag, T = 2):
 		preds = F.softmax(preds, dim = 1)
 		labels = F.softmax(labels, dim = 1)
 		
-		print ("AFTER SOFTMAXING THE PREDS", preds)
-		print ("AFTER SOFTMAXING THE LABELS", labels)
+ 		#print ("AFTER SOFTMAXING THE PREDS", preds)
+ 		#print ("AFTER SOFTMAXING THE LABELS", labels)
 
 		preds = preds.pow(1/T)
 		labels = labels.pow(1/T)
 		
-		print ("AFTER POWERING UP THE PREDS", preds)
-		print ("AFTER POWERING UP THE LABELS", labels)
+		#print ("AFTER POWERING UP THE PREDS", preds)
+		#print ("AFTER POWERING UP THE LABELS", labels)
 
 		sum_preds = torch.sum(preds, dim = 1)
 		sum_labels = torch.sum(preds, dim = 1)
@@ -247,8 +247,8 @@ def model_criterion(preds, labels, flag, T = 2):
 		preds = preds/sum_preds_ref
 		labels = labels/sum_labels_ref
 		
-		print ("PREDS ARE", preds)
-		print ("LABELS ARE", labels)
+		#print ("PREDS ARE", preds)
+		#print ("LABELS ARE", labels)
 
 		del sum_labels_ref
 		del sum_preds_ref
