@@ -172,7 +172,7 @@ References
 3. **Geoffrey Hinton, Oriol Vinyals, Jeff Dean** _Distilling the Knowledge in a Neural Network_ NeurIPs 2014 (formerly known as NIPS). [[arxiv][9]]
 4. PyTorch Docs. [[http://pytorch.org/docs/master](http://pytorch.org/docs/master)]
 
-This repository owes a huge credit to the authors of the original [implementation][11] (code in Matlab). This code repository could only be built due to the help offered by countless people on Stack Overflow and PyTorch Discus blogs
+This repository owes a huge credit to the authors of the original [implementation][10] (code in Matlab). This code repository could only be built due to the help offered by countless people on Stack Overflow and PyTorch Discus blogs
 
 License
 -------
@@ -189,5 +189,3 @@ BSD
 [8]: https://arxiv.org/abs/1606.09282
 [9]: https://arxiv.org/abs/1503.02531
 [10]: https://github.com/rahafaljundi/Expert-Gate
-[11]: https://drive.google.com/drive/folders/1wi1FLUovQHbG3Y8wherIxYvIDAsNbNq_?usp=sharing
-
