@@ -1,5 +1,7 @@
 """
 Module to train the model for the first task. Seperated from the rest of the code for the purpose of clarity
+The paper treats a pretrained Alexnet model as the initial expert so this file also helps to recreate that setting
+without overtly making the generate_models.py file complicated to read at the expense of some redundancy in the code.
 """
 
 #!/usr/bin/env python
