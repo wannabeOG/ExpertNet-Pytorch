@@ -61,7 +61,7 @@ Training
 ------------------------------
 Training a model on a given task takes place using the **`generate_models.py`** file. Simply execute the following lines to begin the training process
 
-Execute the following lines of code (along with the necessary arguments) to generate to generate the expert models for the 4 tasks. Make sure you have donwnloaded the datasets used in these experiments. The steps are detailed [here][12]. If you are using this to test it out on your own datasets, make sure that you make the necessary changes in the **`generate_models.py`** and **`test_models.py`** with regards to the number of tasks being used in the experiment [here][] and [here][]
+Execute the following lines of code (along with the necessary arguments) to generate to generate the expert models for the 4 tasks. Make sure you have donwnloaded the datasets used in these experiments. The steps are detailed [here][12]. If you are using this to test it out on your own datasets, make sure that you make the necessary changes in the **`generate_models.py`** and **`test_models.py`** with regards to the number of tasks being used in the experiment [here][13] and [here][14]. You would also need to make changes to the transforms used in these files.
 
 
 ```sh 
@@ -193,5 +193,5 @@ BSD
 [10]: https://github.com/rahafaljundi/Expert-Gate
 [11]: https://pypi.org/project/gdown
 [12]: #someid
-[13]: 
-[14]: 
+[13]: https://github.com/wannabeOG/ExpertNet-Pytorch/blob/1483b3e66d95b641558ada477d672ca5054f6fea/generate_models.py#L62
+[14]: https://github.com/wannabeOG/ExpertNet-Pytorch/blob/1483b3e66d95b641558ada477d672ca5054f6fea/test_models.py#L46
