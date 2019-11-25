@@ -92,8 +92,6 @@ def get_initial_model(feature_extractor, dset_loaders, dataset_size, encoder_cri
 		model.train(False)
 
 		for data in dset_loaders:
-			#print ("The count is", count)
-			#count = count+1
 			input_data, labels = data
 			input_data = input_data.to(device)
 			
@@ -107,25 +105,14 @@ def get_initial_model(feature_extractor, dset_loaders, dataset_size, encoder_cri
 			
 			loss = encoder_criterion(outputs, input_to_ae)
 			
-			#print ("These steps are getting executed")
 			
-			#del model
-			#del feature_extractor
-			
-			#	del data
-			#	del input_data
-			#del labels
-		
 			del input_to_ae
 			del outputs
 			
-			#print ("Okay working")
-
+			
 			running_loss = loss.item() + running_loss
 
 		running_loss = running_loss/dataset_size
-		
-		#print ("So we don't reach here, do we?")
 		
 		del model
 
@@ -172,28 +159,17 @@ def initialize_new_model(model_init, num_classes, num_of_classes_old):
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 	weight_info = model_init.Tmodel.classifier[-1].weight.data.to(device)
-	#print ("WEIGHT INFO IS", weight_info)
-
-	weight_info = weight_info.to(device)
-	#print (weight_info.shape)
-	model_init.Tmodel.classifier[-1] = nn.Linear(model_init.Tmodel.classifier[-1].in_features, num_of_classes_old + num_classes)
-	#print (weight_info.shape)
 	
-	#model_init.Tmodel.classifier[-1].weight[:num_of_classes_old, :] = weight_info
-
+	weight_info = weight_info.to(device)
+	model_init.Tmodel.classifier[-1] = nn.Linear(model_init.Tmodel.classifier[-1].in_features, num_of_classes_old + num_classes)
+	
 	nn.init.kaiming_normal_(model_init.Tmodel.classifier[-1].weight, nonlinearity='sigmoid')
 	
 	#kaiming_initilaization()
 	model_init.Tmodel.classifier[-1].weight.data[:num_of_classes_old, :] = weight_info
-	#print ("IS THIS WORKING", model_init.Tmodel.classifier[-1].weight)
-	#print ("Inside Initialize model function")
-	
-	#print (model_init.Tmodel.classifier[-1].weight.type())
 	model_init.to(device)
-	#print (model_init.Tmodel.classifier[-1].weight.type())
 	model_init.train(True)
 	
-	#print (next(model_init.parameters()).is_cuda)
 	return model_init 
 
 
@@ -226,14 +202,8 @@ def model_criterion(preds, labels, flag, T = 2):
 		preds = F.softmax(preds, dim = 1)
 		labels = F.softmax(labels, dim = 1)
 		
- 		#print ("AFTER SOFTMAXING THE PREDS", preds)
- 		#print ("AFTER SOFTMAXING THE LABELS", labels)
-
 		preds = preds.pow(1/T)
 		labels = labels.pow(1/T)
-		
-		#print ("AFTER POWERING UP THE PREDS", preds)
-		#print ("AFTER POWERING UP THE LABELS", labels)
 
 		sum_preds = torch.sum(preds, dim = 1)
 		sum_labels = torch.sum(preds, dim = 1)
@@ -247,23 +217,15 @@ def model_criterion(preds, labels, flag, T = 2):
 		preds = preds/sum_preds_ref
 		labels = labels/sum_labels_ref
 		
-		#print ("PREDS ARE", preds)
-		#print ("LABELS ARE", labels)
-
 		del sum_labels_ref
 		del sum_preds_ref
 		
 		del sum_preds
 		del sum_labels
 
-		#preds = preds.to(device)
-		#labels = labels.to(device)
-
 		loss = torch.sum(-1*preds*torch.log(labels), dim = 1)
 		batch_size = loss.size()[0]
 
 		loss = torch.sum(loss, dim = 0)/batch_size
-		#loss = loss.to(device)
-
-		#print (loss.type())
+		
 		return loss
