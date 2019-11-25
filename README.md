@@ -40,8 +40,9 @@ Requisites
 -----------------------------
 
 * PyTorch: Use the instructions that are outlined on [PyTorch Homepage][1] for installing PyTorch 
+* gdown: A simple pip install should suffice. Follow instructions [here][11]
 
-
+Ensure that you have both these libraries downloaded
 
 Datasets and Designing the experiments
 -----------------------------
@@ -60,7 +61,8 @@ Training
 ------------------------------
 Training a model on a given task takes place using the **`generate_models.py`** file. Simply execute the following lines to begin the training process
 
-Execute the following lines of code (along with the necessary arguments) to generate to generate the expert models for the 4 tasks
+Execute the following lines of code (along with the necessary arguments) to generate to generate the expert models for the 4 tasks. Make sure you have donwnloaded the datasets used in these experiments. The steps are detailed [here][12]. If you are using this to test it out on your own datasets, make sure that you make the necessary changes in the **`generate_models.py`** and **`test_models.py`** with regards to the number of tasks being used in the experiment [here][] and [here][]
+
 
 ```sh 
 python3 generate_models.py 
@@ -94,8 +96,8 @@ Refer to the docstrings and the inline comments that are made in `encoder_train.
 Training procedure is really volatile, and these were the boundaries that I could find. I did not carry out an extensive search over the optimum number of epochs and these boundaries were obtained from initial tests. For this range, the loss function **atleast returned a numerical value**, however even in this case, if the model gets stuck in a bad optimum, the loss function starts giving out NaN values and this snowballs into the model not learning at all.  
 
 
-Evaluating the model
--------------------------------
+<a name="someid"></a>Evaluating the model
+------------------------------------------
 
 To recreate the experiments performed, first execute the following lines of code
 
@@ -161,7 +163,7 @@ The ideas proposed in this model; loads only the required model into memory at i
 
 To-Do's for this Project
 ---------------------------------
--[ ] Figure out ways to stablize the training procedure, have isolated the problem to the distillation loss calculation
+-[ ] Figure out ways to stablize the training procedure, have isolated the problem to the distillation loss calculation. The problem also arises if the first "expert" has been trained on a lesser number (<10 in my experiments) of epochs.
 
 
 
@@ -189,3 +191,7 @@ BSD
 [8]: https://arxiv.org/abs/1606.09282
 [9]: https://arxiv.org/abs/1503.02531
 [10]: https://github.com/rahafaljundi/Expert-Gate
+[11]: https://pypi.org/project/gdown
+[12]: #someid
+[13]: 
+[14]: 
