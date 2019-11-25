@@ -23,17 +23,16 @@ year = {2017}
 Introduction
 ---------------------------
 
-Lifelong Machine Learning, or LML, considers systems that can learn many tasks over a lifetime from one or more domains. They retain the knowledge they have learned and use that knowledge to more efficiently and effectively learn new tasks more effectively and efficiently (This is a case of positive inductive bias where the past knoweledge helps the model to perform better on the newer task). 
+Lifelong Machine Learning, or LML, considers systems that can learn many tasks over a lifetime from one or more domains. They retain the knowledge they have learned and use that knowledge to more efficiently and effectively learn new tasks more effectively and efficiently (This is a case of positive inductive bias where the past knowledge helps the model to perform better on the newer task). 
 
-The problem of Catastrophic Inference or Catstrophic Forgetting is one of the major hurdles facing this domain where the performance of the model inexplicably declines on the older tasks once the newer tasks are introduced into the learning pipeline. 
+The problem of Catastrophic Inference or Catastrophic Forgetting is one of the major hurdles facing this domain where the performance of the model inexplicably declines on the older tasks once the newer tasks are introduced into the learning pipeline. 
 
 ![Expert Gate Architecture](https://i.imgur.com/0F9gR7P.png)
 
-This paper advocates the use of seperate "experts" for each task such that each expert is called into action when
-it faces a training sample that is pertinent to the task on which it is the "expert". They theorize that a shared model would be unable to account for the nuances of each task and hence lead to a performance degradation on
-the older tasks as the number of tasks grows
+This paper advocates the use of separate "experts" for each task such that each expert is called into action when
+it faces a training sample that is pertinent to the task on which it is the "expert". They theorize that a shared model would be unable to account for the nuances of each task and hence lead to performance degradation on the older tasks as the number of tasks grows
 
-In order to help distinguish between these tasks, the paper proposes to train a single layer autoencoder on each task, wherein the autoencoders; given the input are taught to reconstruct it. In theory, when a task arrives, the autoencoder having the lowest reconstruction error on the task activates it's corresponding "expert". Therby, for each task, the authors train a single layer autoencoder model and an "expert" which derives it's architecture from AlexNet 
+In order to help distinguish between these tasks, the paper proposes to train a single layer autoencoder on each task, wherein the autoencoders; given the input are taught to reconstruct it. In theory, when a task arrives, the autoencoder having the lowest reconstruction error on the task activates it's corresponding "expert". Thereby, for each task, the authors train a single layer autoencoder model and an "expert" which derives its architecture from AlexNet 
 
 
 Requisites
@@ -47,21 +46,21 @@ Ensure that you have both these libraries downloaded
 Datasets and Designing the experiments
 -----------------------------
 
-The original paper uses [Caltech-UCSD Birds][2], [MIT Scenes][3] and [Oxford Flowers][4] in addition to the [ImageNet][5] (for training the autoencoder). Compuatational and hardware limitations necessitated the design of experiments such that the smaller versions of these standard datasets were used. However this was complicated by the two major reasons:
+The original paper uses [Caltech-UCSD Birds][2], [MIT Scenes][3] and [Oxford Flowers][4] in addition to the [ImageNet][5] (for training the autoencoder). Computational and hardware limitations necessitated the design of experiments such that the smaller versions of these standard datasets were used. However, this was complicated by two major reasons:
 
-* The smaller versions of most of the standard datsets were not available publically
+* The smaller versions of most of the standard datasets were not available publically
 * The ones that could be found (Oxford 17 categories dataset, Birds 200 categories) were getting corrupted by the system such that the dataloaders in PyTorch were reading in files that were prepended with a _ sign.
 
-The [Tiny-Imagenet][6] dataset was used and the 200 odd classses were split into 4 tasks with 50 classes being assigned to each task randomly. This division can also be arbitrary and no speciaal consideration has been given to the decision to split the dataset evenly. Each of these tasks has a "train" and a "test" folder to validate the performance on these wide ranging tasks.
+The [Tiny-Imagenet][6] dataset was used and the 200 odd classes were split into 4 tasks with 50 classes being assigned to each task randomly. This division can also be arbitrary and no special consideration has been given to the decision to split the dataset evenly. Each of these tasks has a "train" and a "test" folder to validate the performance on these wide-ranging tasks.
 
-The purpose behind using the MNIST dataset was to introduce some tasks that were significantly different to the ones in the Tiny Imagenet dataset. This is an attempt to recreate the setting of the original paper on a lower scale
+The purpose behind using the MNIST dataset was to introduce some tasks that were significantly different from the ones in the Tiny Imagenet dataset. This is an attempt to recreate the setting of the original paper on a lower scale
 
 
 Training
 ------------------------------
 Training a model on a given task takes place using the **`generate_models.py`** file. Simply execute the following lines to begin the training process
 
-Execute the following lines of code (along with the necessary arguments) to generate to generate the expert models for the 4 tasks. Make sure you have donwnloaded the datasets used in these experiments. The steps are detailed [here][12]. If you are using this to test it out on your own datasets, make sure that you make the necessary changes in the **`generate_models.py`** and **`test_models.py`** with regards to the number of tasks being used in the experiment [here][13] and [here][14]. You would also need to make changes to the transforms used in these files.
+Execute the following lines of code (along with the necessary arguments) to generate the expert models for the 4 tasks. Make sure you have downloaded the datasets used in these experiments. The steps are detailed [here][12]. If you are using this to test it out on your own datasets, make sure that you make the necessary changes in the **`generate_models.py`** and **`test_models.py`** with regards to the number of tasks being used in the experiment [here][13] and [here][14]. You would also need to make changes to the transforms used in these files.
 
 
 ```sh 
@@ -77,7 +76,7 @@ The file takes the following arguments
 
 Once you invoke the **`generate_models.py`** file with the appropriate arguments, the following things shall happen
 
-1. The Autoencoder model is trained on the features of the last convolutional layer of an Alexnet model (the preprocessing steps are as detailed in ``section 3.1`` of the paper) and the model is stored in **`./models/autoencoders`** with the appropriate task number. The facility to restart training from a given checkpoint is provided so as to protect agianst abrupt failures whilst training
+1. The Autoencoder model is trained on the features of the last convolutional layer of an Alexnet model (the preprocessing steps are as detailed in ``section 3.1`` of the paper) and the model is stored in **`./models/autoencoders`** with the appropriate task number. The facility to restart training from a given checkpoint is provided so as to protect against abrupt failures whilst training
 
 2. After an autoencoder model is trained, a search is carried out over the already existing autoencoders to determine the "expert" which is most closely related to the new task using the task-relatedness metric described in `section 3.3` of the paper
 
@@ -93,13 +92,13 @@ Refer to the docstrings and the inline comments that are made in `encoder_train.
 
 ### MAKE SURE THAT YOU TRAIN THE MODEL FOR ATLEAST 10 EPOCHS BUT ALSO KEEP IT BELOW 25 EPOCHS
 
-Training procedure is really volatile, and these were the boundaries that I could find. I did not carry out an extensive search over the optimum number of epochs and these boundaries were obtained from initial tests. For this range, the loss function **atleast returned a numerical value**, however even in this case, if the model gets stuck in a bad optimum, the loss function starts giving out NaN values and this snowballs into the model not learning at all.  
+The training procedure is really volatile, and these were the boundaries that I could find. I did not carry out an extensive search over the optimum number of epochs and these boundaries were obtained from initial tests. For this range, the loss function **at least returned a numerical value**, however even in this case, if the model gets stuck in a bad optimum, the loss function starts giving out NaN values and this snowballs into the model not learning at all.  
 
 
 <a name="someid"></a>Evaluating the model
 ------------------------------------------
 
-To recreate the experiments performed, first execute the following lines of code
+To recreate the experiments performed, first, execute the following lines of code
 
 ```sh
 cd data_utils
@@ -130,6 +129,9 @@ python3 test_models.py
 ```
 
 * ***use_gpu***: Set the GPU flag to ``True`` to use the GPU. **Default**: ``False``
+* ***batch_size***: Batch Size. **Default**: 16
+
+A file called **`results.txt`** will be created and the results (task accuracy) shall be recorded in this file
 
 Results
 --------------------------------------
@@ -138,12 +140,12 @@ My system could not handle all the number of tasks in this sequence (9 in all) a
 
 **Another key caveat** is that in all these trained models that are derived from the Alexnet architecture, only the last two convolutional layers and the classification layers are being trained. The rest of the layers are frozen and hence are not trained and the results are reported for this setting
 
-The present `test_models.py` is written assuming that your system can handle all the tasks in the full seqeunce. Please make the necessary changes to make the testing procedure compatible with your compuatational requirements. 
+The present `test_models.py` is written assuming that your system can handle all the tasks in the full sequence. Please make the necessary changes to make the testing procedure compatible with your computational requirements. 
 
 The results reported are for this particular setting [Number of epochs used for training: 15]:
 
 **Input_Task_Number**: The task that was fed to the model\
-**Model_activated**: The model that was identifed for this task. The correct model was identified in these cases\
+**Model_activated**: The model that was identified for this task. The correct model was identified in these cases\
 **Accuracy**: Has been rounded to the nearest two decimals [number of right labels identfied]
 
 
@@ -158,7 +160,7 @@ The results reported are for this particular setting [Number of epochs used for 
 
 Final Takeaways
 --------------------------------
-The ideas proposed in this model; loads only the required model into memory at inference. However it is a really expensive procedure to search over all the autoencoders to identify the correct model and this situation will only get worse with an increasing number of tasks. Clearly this would not scale to much longer sequences. It is also not clear how the authors stabilized the training procedure for the **"Learning without Forgetting"** approach.
+The ideas proposed in this model; load only the required model into memory at inference. However, it is a really expensive procedure to search over all the autoencoders to identify the correct model and this situation will only get worse with an increasing number of tasks. Clearly, this would not scale to much longer sequences. It is also not clear how the authors stabilized the training procedure for the **"Learning without Forgetting"** approach.
 
 
 To-Do's for this Project
