@@ -10,6 +10,7 @@ import warnings
 import os
 from pathlib import Path
 import shutil
+import gdown
 
 import requests, zipfile, io
 import time
@@ -32,15 +33,15 @@ task_dict = {'0': '5', '1': '5',
 
 #path to the data file, already been created
 path_to_file =  "../Data"
+path_to_zip_file = "./mnist_jpgfiles.zip"
 
+#need to use it since G-Drive requires 2 GET Requests for larger files
+r = gdown.download("https://drive.google.com/uc?id=1F6xICWB2ZqUouf274xJViMmMvLKC39fA",output="mnist_jpgfiles.zip",quiet=False)
 
-#zip file url
-zip_file_url = "https://content-na.drive.amazonaws.com/v2/download/presigned/qg_zmem-8-Pbh2kOwdlHbgkDdJ4XrKXUvhxSvlze-eYeJxFPc?download=true&ownerId=A1ZVA79TNDB22U"
-r = requests.get(zip_file_url)
-
-#unzip the MNIST dataset the "Data" folder
-with zipfile.ZipFile(io.BytesIO(r.content), 'r') as zip_ref:
+#unzip the MNIST dataset the "Data" folder and delete the zippped directory
+with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
 	zip_ref.extractall(path_to_file)
+os.remove(path_to_zip_file)
 
 
 #train and test paths
