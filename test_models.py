@@ -22,6 +22,7 @@ import torchvision.transforms as transforms
 import argparse 
 import numpy as np
 from random import shuffle
+import os
 
 import copy
 from autoencoder import *
@@ -38,13 +39,16 @@ from model_utils import *
 parser = argparse.ArgumentParser(description='Test file')
 #parser.add_argument('--task_number', default=1, type=int, help='Select the task you want to test out the architecture; choose from 1-4')
 parser.add_argument('--use_gpu', default=False, type=bool, help = 'Set the flag if you wish to use the GPU')
+parser.add_argument('--batch_size', default=16, type=int, help='Batch size you want to use whilst testing the model')
 
+#get the arguments passed in 
 args = parser.parse_args()
 use_gpu = args.use_gpu
+batch_size = args.batch_size
 
 #randomly shuffle the tasks in the sequence
 task_number_list = [x for x in range(1, 10)]
-shuffle(task_number)
+shuffle(task_number_list)
 
 
 #transformations for the test data
@@ -65,12 +69,10 @@ data_transforms_mnist = {
 		])
 }
 
-
-#create the results.txt file
-with open("results.txt", "w") as myfile:
-	myfile.write()
-	myfile.close()
-
+#set the device to be used and initialize the feature extractor to feed the data into the autoencoder
+device = torch.device("cuda:0" if use_gpu else "cpu")
+feature_extractor = Alexnet_FE(models.alexnet(pretrained=True))
+feature_extractor.to(device)
 
 for task_number in task_number_list:
 
@@ -91,14 +93,14 @@ for task_number in task_number_list:
 		image_folder = datasets.ImageFolder(os.path.join(path_task, 'test'), transform = data_transforms_mnist['test'])
 		dset_size = len(image_folder)
 
-	device = torch.device("cuda:0" if use_gpu else "cpu")
-
+	
 	dset_loaders = torch.utils.data.DataLoader(image_folder, batch_size = batch_size,
 													shuffle=True, num_workers=4)
 
 	best_loss = 99999999999
 	model_number = 0
 
+	
 	#Load autoencoder models for tasks 1-4; need to select the best performing autoencoder model
 	for ae_number in range(1, 10):
 		ae_path = os.path.join(encoder_path, "autoencoder_" + str(ae_number))
@@ -122,12 +124,19 @@ for task_number in task_number_list:
 			else:
 				input_data  = Variable(input_data)
 
-			preds = model(input_data)
-			loss = encoder_criterion(preds, input_data)
+
+			#get the input to the autoencoder from the conv backbone of the Alexnet
+			input_to_ae = feature_extractor(input_data)
+			input_to_ae = input_to_ae.view(input_to_ae.size(0), -1)
 			
+			#get the outputs from the model
+			preds = model(input_to_ae)
+			loss = encoder_criterion(preds, input_to_ae)
+		
 			del preds
 			del input_data
-			
+			del input_to_ae
+
 			running_loss = running_loss + loss.item()
 
 		model_loss = running_loss/dset_size
@@ -146,15 +155,17 @@ for task_number in task_number_list:
 		print ("Incorrect routing, wrong model has been selected")
 
 
-	trained_model_path = os.path.join(model_path, "model_" + model_number)
+	#Load the expert that has been found by this procedure into memory
+	trained_model_path = os.path.join(model_path, "model_" + str(model_number))
 
+	#Get the number of classes that this expert was exposed to
 	file_name = os.path.join(trained_model_path, "classes.txt") 
 	file_object = open(file_name, 'r')
 
 	num_of_classes = file_object.read()
 	file_object.close()
 
-	num_of_classes = int(num_of_classes_old)
+	num_of_classes = int(num_of_classes)
 
 	model = GeneralModelClass(num_of_classes)
 	model.load_state_dict(torch.load(os.path.join(trained_model_path, 'best_performing_model.pth')))
@@ -193,6 +204,7 @@ for task_number in task_number_list:
 	model_loss = running_loss/dset_size
 	model_accuracy = running_corrects.double()/dset_size
 
+	#Store the results into a file
 	with open("results.txt", "a") as myfile:
 		myfile.write("\n{}: {}".format(task_number, model_accuracy*100))
 		myfile.close()
