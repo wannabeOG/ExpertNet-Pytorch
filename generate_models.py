@@ -59,7 +59,7 @@ batch_size = args.batch_size
 lr = args.init_lr
 
 #number of tasks in the sequence
-no_of_tasks = 4
+no_of_tasks = 9
 
 #transforms for the tiny-imagenet dataset. Applicable for the tasks 1-4
 data_transforms_tin = {
@@ -89,6 +89,19 @@ data_transforms_mnist = {
 			transforms.Normalize([0.1307,], [0.3081,])
 		])
 }
+
+#code to generate the initial directories for storing the models
+model_path = os.path.join(os.getcwd(), "models")
+
+if not (os.path.isdir(model_path)):
+	os.mkdir(model_path)
+
+if not (os.path.isdir(os.path.join(model_path, "autoencoders"))):
+	os.mkdir(os.path.join(model_path, "autoencoders"))
+
+if not (os.path.isdir(os.path.join(model_path, "trained_models"))):
+	os.mkdir(os.path.join(model_path, "trained_models"))
+
 
 #Initial model 
 pretrained_alexnet = models.alexnet(pretrained = True)
