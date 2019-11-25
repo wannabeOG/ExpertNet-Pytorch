@@ -172,7 +172,7 @@ def initialize_new_model(model_init, num_classes, num_of_classes_old):
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 	weight_info = model_init.Tmodel.classifier[-1].weight.data.to(device)
-	print ("WEIGHT INFO IS", weight_info)
+	#print ("WEIGHT INFO IS", weight_info)
 
 	weight_info = weight_info.to(device)
 	#print (weight_info.shape)
@@ -185,7 +185,7 @@ def initialize_new_model(model_init, num_classes, num_of_classes_old):
 	
 	#kaiming_initilaization()
 	model_init.Tmodel.classifier[-1].weight.data[:num_of_classes_old, :] = weight_info
-	print ("IS THIS WORKING", model_init.Tmodel.classifier[-1].weight)
+	#print ("IS THIS WORKING", model_init.Tmodel.classifier[-1].weight)
 	#print ("Inside Initialize model function")
 	
 	#print (model_init.Tmodel.classifier[-1].weight.type())
