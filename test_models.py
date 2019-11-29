@@ -47,9 +47,10 @@ use_gpu = args.use_gpu
 batch_size = args.batch_size
 
 #randomly shuffle the tasks in the sequence
-task_number_list = [x for x in range(1, 10)]
-shuffle(task_number_list)
+task_number_list = [x for x in range(1,5)]
+#shuffle(task_number_list)
 
+classes = []
 
 #transformations for the test data
 data_transforms_tin = {
@@ -69,6 +70,23 @@ data_transforms_mnist = {
 		])
 }
 
+#Get the number of classes in each of the given task folders
+for task_number in task_number_list:
+
+	#get the paths to the data and model
+	data_path = os.path.join(os.getcwd(), "Data")
+	encoder_path = os.path.join(os.getcwd(), "models", "autoencoders")
+	model_path = os.path.join(os.getcwd(), "models", "trained_models")
+	path_task = os.path.join(data_path, "Task_" + str(task_number))
+
+
+	if(task_number >=1 and task_number <=4):
+		#get the image folder
+		image_folder = datasets.ImageFolder(os.path.join(path_task, 'test'), transform = data_transforms_tin['test'])
+		dset_size = len(image_folder)
+		classes.append(len(image_folder.classes))
+
+
 #set the device to be used and initialize the feature extractor to feed the data into the autoencoder
 device = torch.device("cuda:0" if use_gpu else "cpu")
 feature_extractor = Alexnet_FE(models.alexnet(pretrained=True))
@@ -87,7 +105,7 @@ for task_number in task_number_list:
 		#get the image folder
 		image_folder = datasets.ImageFolder(os.path.join(path_task, 'test'), transform = data_transforms_tin['test'])
 		dset_size = len(image_folder)
-	
+
 	else:
 		#get the image folder
 		image_folder = datasets.ImageFolder(os.path.join(path_task, 'test'), transform = data_transforms_mnist['test'])
@@ -102,7 +120,7 @@ for task_number in task_number_list:
 
 	
 	#Load autoencoder models for tasks 1-4; need to select the best performing autoencoder model
-	for ae_number in range(1, 10):
+	for ae_number in range(1, 5):
 		ae_path = os.path.join(encoder_path, "autoencoder_" + str(ae_number))
 		
 		#Load a trained autoencoder model
@@ -192,8 +210,13 @@ for task_number in task_number_list:
 		outputs = model(input_data)
 		loss = model_criterion(outputs, labels, 'CE')
 		
+		#for a more robust analysis check over the entire output layer (similar to multi head setting)
 		_, preds = torch.max(outputs, 1)
 
+		#check over only the specific layer identified by the AE (similar to single head setting)
+		#uncomment this line if you wish to evalute this setting
+		#_, preds = torch.max(outputs[:, -classes[model_number]:], 1)
+		
 		running_corrects += torch.sum(preds==labels.data)
 		running_loss = running_loss + loss.item()
 
