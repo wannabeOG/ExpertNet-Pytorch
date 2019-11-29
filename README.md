@@ -3,7 +3,7 @@ Expert Gate: Lifelong Learning with a Network of Experts
 
 Code for the Paper
 
-**[Expert Fate: Lifelong Learning with a Network of Experts][7]**
+**[Expert Gate: Lifelong Learning with a Network of Experts][7]**
 <br />
 Rahaf Aljundi, Punarjay Chakravarty, Tinne Tuytelaars\
 [CVPR 2017]
@@ -140,6 +140,12 @@ My system could not handle all the number of tasks in this sequence (9 in all) a
 
 **Another key caveat** is that in all these trained models that are derived from the Alexnet architecture, only the last two convolutional layers and the classification layers are being trained. The rest of the layers are frozen and hence are not trained and the results are reported for this setting
 
+There are two evaluation criteria: 
+1. The [first][15] takes a max over all the output units in the final layer of the network (Results have been reported for this setting). This is a more challenging criteria
+2. The [second][16] takes a max over only the relevant output units in the final layer of the network (More similar to the setting in paper)
+
+Uncomment any of these lines to follow that particular evaluation criteria   
+
 The present `test_models.py` is written assuming that your system can handle all the tasks in the full sequence. Please make the necessary changes to make the testing procedure compatible with your computational requirements. 
 
 The results reported are for this particular setting [Number of epochs used for training: 15]:
@@ -197,3 +203,5 @@ BSD
 [12]: #someid
 [13]: https://github.com/wannabeOG/ExpertNet-Pytorch/blob/1483b3e66d95b641558ada477d672ca5054f6fea/generate_models.py#L62
 [14]: https://github.com/wannabeOG/ExpertNet-Pytorch/blob/1483b3e66d95b641558ada477d672ca5054f6fea/test_models.py#L46
+[15]: 
+[16]:
