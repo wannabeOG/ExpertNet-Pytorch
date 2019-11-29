@@ -47,7 +47,7 @@ use_gpu = args.use_gpu
 batch_size = args.batch_size
 
 #randomly shuffle the tasks in the sequence
-task_number_list = [x for x in range(1,5)]
+task_number_list = [x for x in range(1,10)]
 #shuffle(task_number_list)
 
 classes = []
@@ -70,22 +70,29 @@ data_transforms_mnist = {
 		])
 }
 
+
+#get the paths to the data and model
+data_path = os.path.join(os.getcwd(), "Data")
+encoder_path = os.path.join(os.getcwd(), "models", "autoencoders")
+model_path = os.path.join(os.getcwd(), "models", "trained_models")
+
+
 #Get the number of classes in each of the given task folders
 for task_number in task_number_list:
 
-	#get the paths to the data and model
-	data_path = os.path.join(os.getcwd(), "Data")
-	encoder_path = os.path.join(os.getcwd(), "models", "autoencoders")
-	model_path = os.path.join(os.getcwd(), "models", "trained_models")
 	path_task = os.path.join(data_path, "Task_" + str(task_number))
-
-
 	if(task_number >=1 and task_number <=4):
 		#get the image folder
 		image_folder = datasets.ImageFolder(os.path.join(path_task, 'test'), transform = data_transforms_tin['test'])
-		dset_size = len(image_folder)
 		classes.append(len(image_folder.classes))
 
+	else:
+		image_folder = datasets.ImageFolder(os.path.join(path_task, 'test'), transform = data_transforms_mnist['test'])
+		classes.append(len(image_folder.classes))
+
+
+#shuffle the sequence of the tasks
+shuffle(task_number_list)
 
 #set the device to be used and initialize the feature extractor to feed the data into the autoencoder
 device = torch.device("cuda:0" if use_gpu else "cpu")
@@ -95,11 +102,7 @@ feature_extractor.to(device)
 for task_number in task_number_list:
 
 	#get the paths to the data and model
-	data_path = os.path.join(os.getcwd(), "Data")
-	encoder_path = os.path.join(os.getcwd(), "models", "autoencoders")
-	model_path = os.path.join(os.getcwd(), "models", "trained_models")
 	path_task = os.path.join(data_path, "Task_" + str(task_number))
-
 
 	if(task_number >=1 and task_number <=4):
 		#get the image folder
@@ -119,8 +122,8 @@ for task_number in task_number_list:
 	model_number = 0
 
 	
-	#Load autoencoder models for tasks 1-4; need to select the best performing autoencoder model
-	for ae_number in range(1, 5):
+	#Load autoencoder models for tasks 1-10; need to select the best performing autoencoder model
+	for ae_number in range(1, 10):
 		ae_path = os.path.join(encoder_path, "autoencoder_" + str(ae_number))
 		
 		#Load a trained autoencoder model
