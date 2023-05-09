@@ -20,19 +20,7 @@ since = time.time()
 dir_list = [['0','1'],['2','3'],['4','5'],['6','7'],['8', '9']]
 
 
-#dictionary mapping the digits to the task directory
-#images belonging to '0' and '1' map to Task_5 directory 
-#images belonging to '2' and '3' map to Task_6 directory
-#and so on
-task_dict = {'0': '5', '1': '5', 
-			'2': '6', '3': '6', 
-			'4': '7', '5': '7', 
-			'6': '8', '7': '8', 
-			'8': '9', '9': '9'}
-
-
-#path to the data file, already been created
-path_to_file =  "../Data"
+#di
 path_to_zip_file = "./mnist_jpgfiles.zip"
 
 #need to use it since G-Drive requires 2 GET Requests for larger files
